@@ -82,7 +82,7 @@ public API key.
 Current hosted endpoint:
 
 ```text
-https://dual-retrieval-specifically-fusion.trycloudflare.com
+https://instructions-medicine-enabling-sent.trycloudflare.com
 ```
 
 This is a Cloudflare quick-tunnel URL, so it can change if the tunnel process is
@@ -113,6 +113,10 @@ Windows PowerShell:
 $env:CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples\smoke_hosted_demo.py
 ```
+
+The hosted client and smoke test use only the Python standard library. Do not
+install `requirements.txt` just to query the hosted API; that file is for a CCI
+server runtime.
 
 Ask one question:
 
@@ -158,6 +162,10 @@ From Windows, using SSH:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1
 ```
+
+The Windows helper checks `CELL_RAG_SSH_KEY`, then looks for `public_key`,
+`id_ed25519`, or `id_rsa` under the current user's `.ssh` directory. For a key
+stored elsewhere, pass `-IdentityFile C:\path\to\key`.
 
 Force a fresh quick-tunnel URL:
 
@@ -389,6 +397,18 @@ Then start the server with the expanded paths printed by the script, or update
 
 ## Evaluation
 
+Run the dependency-free fresh-clone checks on any machine with Python 3.12+:
+
+```bash
+python -m compileall -q src examples scripts tests
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions runs these checks, validates shell and PowerShell syntax, and
+rejects accidentally committed models, generated corpora, indexes, or secrets.
+
+Server-side evaluation requires the CCI runtime artifacts.
+
 Run retrieval eval:
 
 ```bash
@@ -414,6 +434,24 @@ Run a saved audit:
 ```bash
 scripts/audit_all.sh
 ```
+
+For an audit launched over SSH, use the detached runner so a dropped connection
+does not kill a long evaluation:
+
+```bash
+scripts/start_detached_audit.sh
+scripts/status_detached_audit.sh
+```
+
+The full audit also initializes and verifies the hosted HTTPS tunnel. Core-only
+status checks treat the tunnel as optional; use
+`STATUS_REQUIRE_PUBLIC_TUNNEL=1 scripts/status_all.sh` when public availability
+must be part of the pass/fail result.
+
+Because some CCI images cannot resolve their own quick-tunnel hostname, the
+server audit verifies the tunnel process and URL state with
+`PUBLIC_DEMO_SKIP_HEALTH=1`. The external hosted smoke test remains the final
+HTTPS reachability check.
 
 Current smoke coverage:
 

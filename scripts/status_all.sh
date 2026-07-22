@@ -9,29 +9,46 @@ set -euo pipefail
 # - GPU: current memory pressure, important because this stack is VRAM-tight.
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STATUS=0
+REQUIRE_PUBLIC_TUNNEL="${STATUS_REQUIRE_PUBLIC_TUNNEL:-0}"
 
 echo "== Host =="
 hostname
 echo
 
 echo "== RAG server =="
-"$ROOT/scripts/status_rag_server.sh" || true
+if ! "$ROOT/scripts/status_rag_server.sh"; then
+  STATUS=1
+fi
 
 echo
 echo "== Public API server =="
-"$ROOT/scripts/status_public_api.sh" || true
+if ! "$ROOT/scripts/status_public_api.sh"; then
+  STATUS=1
+fi
 
 echo
 echo "== Public demo tunnel =="
 if [[ -x "$ROOT/scripts/status_public_demo_tunnel.sh" ]]; then
-  "$ROOT/scripts/status_public_demo_tunnel.sh" || true
+  if ! "$ROOT/scripts/status_public_demo_tunnel.sh"; then
+    if [[ "$REQUIRE_PUBLIC_TUNNEL" == "1" ]]; then
+      STATUS=1
+    else
+      echo "Public tunnel is optional for this status check."
+    fi
+  fi
 else
   echo "status_public_demo_tunnel.sh not installed"
+  if [[ "$REQUIRE_PUBLIC_TUNNEL" == "1" ]]; then
+    STATUS=1
+  fi
 fi
 
 echo
 echo "== LLM server =="
-"$ROOT/scripts/status_llm_server.sh" || true
+if ! "$ROOT/scripts/status_llm_server.sh"; then
+  STATUS=1
+fi
 
 echo
 echo "== GPU =="
@@ -44,3 +61,5 @@ fi
 echo
 echo "== Stack processes =="
 ps -ef | grep -E 'rag_search_server|public_api_server|cloudflared|vllm.entrypoints.openai.api_server|uvicorn rag_search_server|uvicorn public_api_server' | grep -v grep || echo "No stack processes found."
+
+exit "$STATUS"

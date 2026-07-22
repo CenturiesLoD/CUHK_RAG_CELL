@@ -14,22 +14,32 @@ if (-not $HostName) {
 }
 
 if (-not $IdentityFile) {
-    $IdentityFile = Join-Path $HOME ".ssh\public_key"
+    $userProfile = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+    $keyCandidates = @("public_key", "id_ed25519", "id_rsa") |
+        ForEach-Object { Join-Path $userProfile ".ssh\$_" }
+    $IdentityFile = $keyCandidates | Where-Object { Test-Path -LiteralPath $_ } |
+        Select-Object -First 1
+}
+
+if ($IdentityFile -and -not (Test-Path -LiteralPath $IdentityFile)) {
+    throw "SSH identity file was not found: $IdentityFile"
 }
 
 $target = "$User@$HostName"
 $tunnelScript = Join-Path $PSScriptRoot "public_api_tunnel.ps1"
 $sshArgs = @(
     "-p", "$SshPort",
-    "-i", "$IdentityFile",
     "-o", "ConnectTimeout=20",
     "-o", "ServerAliveInterval=30",
-    "-o", "IdentitiesOnly=yes",
     "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=NUL",
-    "$target",
-    "cd $RemoteProjectRoot && scripts/ensure_stack.sh"
+    "-o", "UserKnownHostsFile=NUL"
 )
+
+if ($IdentityFile) {
+    $sshArgs += @("-i", $IdentityFile, "-o", "IdentitiesOnly=yes")
+}
+
+$sshArgs += @("$target", "cd $RemoteProjectRoot && scripts/ensure_stack.sh")
 
 Write-Host "Ensuring remote Cell RAG stack on $target..."
 & ssh.exe @sshArgs
@@ -50,5 +60,6 @@ if ($OpenTunnel) {
 else {
     Write-Host ""
     Write-Host "To open the tunnel now, run:"
-    Write-Host "powershell -ExecutionPolicy Bypass -File scripts\public_api_tunnel.ps1 -HostName $HostName -IdentityFile `"$IdentityFile`""
+    $identityArgument = if ($IdentityFile) { " -IdentityFile `"$IdentityFile`"" } else { "" }
+    Write-Host "powershell -ExecutionPolicy Bypass -File scripts\public_api_tunnel.ps1 -HostName $HostName$identityArgument"
 }

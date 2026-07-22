@@ -27,6 +27,7 @@ if [[ -f "$PIDFILE" ]]; then
         echo "Public demo tunnel already running: pid=$PID"
         if [[ -s "$URLFILE" ]]; then
             echo "URL: $(cat "$URLFILE")"
+            "$ROOT/scripts/write_public_endpoint_manifest.sh" || true
         fi
         exit 0
     fi

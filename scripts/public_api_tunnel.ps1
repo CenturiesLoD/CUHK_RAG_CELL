@@ -18,7 +18,15 @@ if (-not $HostName) {
 }
 
 if (-not $IdentityFile) {
-    $IdentityFile = Join-Path $HOME ".ssh\public_key"
+    $userProfile = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+    $keyCandidates = @("public_key", "id_ed25519", "id_rsa") |
+        ForEach-Object { Join-Path $userProfile ".ssh\$_" }
+    $IdentityFile = $keyCandidates | Where-Object { Test-Path -LiteralPath $_ } |
+        Select-Object -First 1
+}
+
+if ($IdentityFile -and -not (Test-Path -LiteralPath $IdentityFile)) {
+    throw "SSH identity file was not found: $IdentityFile"
 }
 
 function Wait-Health {
@@ -45,14 +53,17 @@ $sshArgs = @(
     "-N",
     "-L", "127.0.0.1:$LocalPort`:127.0.0.1:$RemotePort",
     "-p", "$SshPort",
-    "-i", "$IdentityFile",
     "-o", "ExitOnForwardFailure=yes",
     "-o", "ServerAliveInterval=30",
-    "-o", "IdentitiesOnly=yes",
     "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=NUL",
-    "$target"
+    "-o", "UserKnownHostsFile=NUL"
 )
+
+if ($IdentityFile) {
+    $sshArgs += @("-i", $IdentityFile, "-o", "IdentitiesOnly=yes")
+}
+
+$sshArgs += "$target"
 
 Write-Host "Starting SSH tunnel to $target..."
 $process = Start-Process -FilePath "ssh.exe" -ArgumentList $sshArgs -WindowStyle Hidden -PassThru

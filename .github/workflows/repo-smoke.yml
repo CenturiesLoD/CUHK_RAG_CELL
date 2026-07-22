@@ -1,0 +1,41 @@
+name: Repository smoke tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lightweight-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile Python files
+        run: python -m compileall -q src examples scripts tests
+
+      - name: Run dependency-free tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Check shell syntax
+        run: bash -n scripts/*.sh
+
+      - name: Check PowerShell syntax
+        shell: pwsh
+        run: |
+          Get-ChildItem scripts -Filter *.ps1 | ForEach-Object {
+            $null = [scriptblock]::Create((Get-Content -Raw -LiteralPath $_.FullName))
+            Write-Host "OK $($_.Name)"
+          }
+
+      - name: Reject committed runtime artifacts
+        shell: bash
+        run: |
+          if git ls-files | grep -E '(^|/)(models|sources|raw|processed|chunks|embeddings|secrets|logs|reports)/|\.(npz|npy|faiss|safetensors|parquet|h5ad)$'; then
+            echo "Large runtime artifacts or secrets must not be committed."
+            exit 1
+          fi

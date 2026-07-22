@@ -23,4 +23,5 @@ if curl -fsS "http://$HOST:$PORT/v1/models"; then
   echo "Health: ok"
 else
   echo "Health: unavailable"
+  exit 1
 fi

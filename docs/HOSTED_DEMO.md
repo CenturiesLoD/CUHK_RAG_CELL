@@ -53,6 +53,10 @@ From Windows, if SSH access to CCI is configured:
 powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1
 ```
 
+The helper uses `CELL_RAG_SSH_KEY` when set, otherwise it checks the current
+user's `.ssh` directory for `public_key`, `id_ed25519`, or `id_rsa`. Use
+`-IdentityFile C:\path\to\key` to select a different key.
+
 Some CCI runtime images can create the tunnel but cannot resolve their own
 `trycloudflare.com` hostname. In that case, verify the public URL from an
 external client:

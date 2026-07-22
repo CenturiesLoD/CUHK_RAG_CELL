@@ -10,6 +10,15 @@ scripts/ensure_stack.sh
 scripts/audit_all.sh
 ```
 
+When starting an audit through SSH, prefer the detached wrapper. It keeps the
+evaluation running on CCI if the SSH connection closes and records the current
+PID, output directory, and log under `logs/`:
+
+```bash
+scripts/start_detached_audit.sh
+scripts/status_detached_audit.sh
+```
+
 Use `scripts/ensure_stack.sh` before audits or demos when the stack may have
 been stopped by the runtime. It starts only missing services and leaves healthy
 services running.
@@ -35,15 +44,17 @@ Each audit directory contains:
 - `00_environment_snapshot.log`: host, project root, Git state if available,
   runtime `.env` settings, artifact file sizes, line counts, and GPU state.
 - `01_start_all.log`: local LLM and RAG startup result.
-- `02_status_initial.log`: initial server, model, and GPU health.
-- `03_validate_source_registry.log`: source registry and artifact consistency
+- `02_ensure_hosted_demo.log`: public API authentication and Cloudflare tunnel startup.
+- `03_status_initial.log`: initial server, model, tunnel, and GPU health.
+- `04_validate_source_registry.log`: source registry and artifact consistency
   validation.
-- `04_source_report.log`: active source counts and field coverage.
-- `05_retrieval_eval_main.log`: main retrieval eval.
-- `06_retrieval_eval_cellxgene.log`: CELLxGENE retrieval eval.
-- `07_answer_eval_main.log`: main answer-grounding and citation-audit eval.
-- `08_answer_eval_cellxgene.log`: CELLxGENE answer-grounding and citation-audit eval.
-- `09_status_final.log`: final server, model, vector backend, reranker, and GPU health.
+- `05_source_report.log`: active source counts and field coverage.
+- `06_retrieval_eval_main.log`: main retrieval eval.
+- `07_retrieval_eval_cellxgene.log`: CELLxGENE retrieval eval.
+- `08_answer_eval_main.log`: main answer-grounding and citation-audit eval.
+- `09_answer_eval_cellxgene.log`: CELLxGENE answer-grounding and citation-audit eval.
+- `10_status_final.log`: final server, model, vector backend, reranker, tunnel, and GPU health.
+- `11_public_demo_state.log`: live tunnel process and current URL-file validation.
 
 The public API wrapper also has a focused smoke test:
 
@@ -65,7 +76,13 @@ A passing audit means:
 - retrieval routing still passes the current source-aware smoke tests;
 - generated answers pass citation and grounding hygiene checks, including the API-returned `citation_check`;
 - the public API wrapper can call the internal RAG API and return a cited answer through `/ask`;
+- the Cloudflare tunnel process is live and has a current public URL;
 - the stack remains healthy at the end of the run.
+
+Some CCI runtime images cannot resolve their own `trycloudflare.com` hostname.
+For that reason, public HTTPS reachability is tested from an external client,
+not counted from CCI DNS. Run `python examples/smoke_hosted_demo.py` externally
+with the API key after the server-side audit.
 
 ## What Passing Does Not Mean
 

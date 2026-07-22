@@ -86,14 +86,16 @@ write_environment_snapshot() {
 write_environment_snapshot
 
 run_step "01_start_all" scripts/start_all.sh
-run_step "02_status_initial" scripts/status_all.sh
-run_step "03_validate_source_registry" scripts/validate_source_registry.sh
-run_step "04_source_report" scripts/report_sources.sh
-run_step "05_retrieval_eval_main" scripts/run_retrieval_eval.sh
-run_step "06_retrieval_eval_cellxgene" scripts/run_retrieval_eval.sh --cases eval/cellxgene_queries.jsonl
-run_step "07_answer_eval_main" scripts/run_answer_eval.sh
-run_step "08_answer_eval_cellxgene" scripts/run_answer_eval.sh --cases eval/cellxgene_answer_cases.jsonl
-run_step "09_status_final" scripts/status_all.sh
+run_step "02_ensure_hosted_demo" scripts/ensure_hosted_demo.sh
+run_step "03_status_initial" env STATUS_REQUIRE_PUBLIC_TUNNEL=1 PUBLIC_DEMO_SKIP_HEALTH=1 scripts/status_all.sh
+run_step "04_validate_source_registry" scripts/validate_source_registry.sh
+run_step "05_source_report" scripts/report_sources.sh
+run_step "06_retrieval_eval_main" scripts/run_retrieval_eval.sh
+run_step "07_retrieval_eval_cellxgene" scripts/run_retrieval_eval.sh --cases eval/cellxgene_queries.jsonl
+run_step "08_answer_eval_main" scripts/run_answer_eval.sh
+run_step "09_answer_eval_cellxgene" scripts/run_answer_eval.sh --cases eval/cellxgene_answer_cases.jsonl
+run_step "10_status_final" env STATUS_REQUIRE_PUBLIC_TUNNEL=1 PUBLIC_DEMO_SKIP_HEALTH=1 scripts/status_all.sh
+run_step "11_public_demo_state" env PUBLIC_DEMO_SKIP_HEALTH=1 scripts/status_public_demo_tunnel.sh
 
 FAILED_STEPS="$(awk 'NR > 1 && $1 != 0 {print $2}' "$STATUS_TSV")"
 {

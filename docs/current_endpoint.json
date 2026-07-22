@@ -1,7 +1,7 @@
 {
-  "base_url": "https://dual-retrieval-specifically-fusion.trycloudflare.com",
-  "status_url": "https://dual-retrieval-specifically-fusion.trycloudflare.com/health",
-  "updated_at_utc": "2026-07-22T09:08:13Z",
+  "base_url": "https://instructions-medicine-enabling-sent.trycloudflare.com",
+  "status_url": "https://instructions-medicine-enabling-sent.trycloudflare.com/health",
+  "updated_at_utc": "2026-07-22T11:02:56Z",
   "backend": "CCI Cloudflare quick tunnel",
   "note": "This URL is discovered through this stable GitHub manifest. If the quick tunnel restarts, update this file with the new URL."
 }

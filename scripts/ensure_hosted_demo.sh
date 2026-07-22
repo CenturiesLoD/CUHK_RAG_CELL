@@ -38,7 +38,7 @@ cat reports/public_demo/smoke_public_demo_latest.log
 
 echo
 echo "== Public demo status =="
-scripts/status_public_demo_tunnel.sh
+PUBLIC_DEMO_SKIP_HEALTH=1 scripts/status_public_demo_tunnel.sh
 
 echo
 echo "Hosted demo backend is ready."
