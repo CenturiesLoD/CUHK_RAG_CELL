@@ -77,7 +77,7 @@ Active source families:
 ## Quickstart: Hosted API
 
 Use this path if the CCI backend is already running. You only need Python and the
-public API URL/key.
+public API key.
 
 Current hosted endpoint:
 
@@ -85,9 +85,15 @@ Current hosted endpoint:
 https://dual-retrieval-specifically-fusion.trycloudflare.com
 ```
 
-This is a Cloudflare quick-tunnel URL. It is live at the time of this README
-update, but it can change if the tunnel process is restarted. The current URL can
-always be checked on CCI with:
+This is a Cloudflare quick-tunnel URL, so it can change if the tunnel process is
+restarted. To avoid making users edit URLs manually, the example clients
+auto-discover the current endpoint from this stable GitHub manifest:
+
+```text
+https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+```
+
+The current URL can also be checked on CCI with:
 
 ```bash
 cd /data/L202500484/cell_rag
@@ -97,7 +103,6 @@ scripts/status_public_demo_tunnel.sh
 Linux/macOS:
 
 ```bash
-export CELL_RAG_DEMO_URL="https://dual-retrieval-specifically-fusion.trycloudflare.com"
 export CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples/smoke_hosted_demo.py
 ```
@@ -105,7 +110,6 @@ python examples/smoke_hosted_demo.py
 Windows PowerShell:
 
 ```powershell
-$env:CELL_RAG_DEMO_URL="https://dual-retrieval-specifically-fusion.trycloudflare.com"
 $env:CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples\smoke_hosted_demo.py
 ```
@@ -114,7 +118,6 @@ Ask one question:
 
 ```bash
 python examples/python_client.py \
-  --base-url "$CELL_RAG_DEMO_URL" \
   --api-key "$CELL_RAG_DEMO_API_KEY" \
   --question "What markers identify regulatory T cells?"
 ```
@@ -123,10 +126,11 @@ PowerShell wrapper:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
-  -BaseUrl $env:CELL_RAG_DEMO_URL `
   -ApiKey $env:CELL_RAG_DEMO_API_KEY `
   -Question "What is a regulatory T cell?"
 ```
+
+If you want to override discovery, set `CELL_RAG_DEMO_URL` or pass `--base-url`.
 
 Expected smoke-test behavior:
 

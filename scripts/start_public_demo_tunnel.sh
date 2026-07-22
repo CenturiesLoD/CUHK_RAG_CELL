@@ -52,6 +52,8 @@ for _ in $(seq 1 90); do
     if [[ -n "$URL" ]]; then
         echo "$URL" > "$URLFILE"
         echo "Public demo URL: $URL"
+        "$ROOT/scripts/write_public_endpoint_manifest.sh" || true
+        echo "To publish endpoint discovery, run: scripts/publish_public_endpoint.sh with GitHub push access."
         exit 0
     fi
 

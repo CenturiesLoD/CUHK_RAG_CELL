@@ -10,6 +10,8 @@ import sys
 import urllib.error
 import urllib.request
 
+from endpoint_discovery import resolve_base_url
+
 
 def request_json(
     method: str,
@@ -49,10 +51,7 @@ def main() -> int:
     parser.add_argument("--question", default="What is a regulatory T cell?")
     args = parser.parse_args()
 
-    if not args.base_url:
-        raise SystemExit("Set --base-url or CELL_RAG_DEMO_URL.")
-
-    base_url = args.base_url.rstrip("/")
+    base_url = resolve_base_url(args.base_url)
     errors: list[str] = []
 
     health_status, health = request_json("GET", f"{base_url}/health", timeout=60)

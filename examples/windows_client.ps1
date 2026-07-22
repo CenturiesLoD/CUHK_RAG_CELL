@@ -9,9 +9,6 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not $BaseUrl) {
-    throw "Set -BaseUrl or CELL_RAG_DEMO_URL."
-}
 if (-not $ApiKey) {
     throw "Set -ApiKey or CELL_RAG_DEMO_API_KEY."
 }
@@ -29,11 +26,18 @@ if (-not $Python) {
 }
 
 $client = Join-Path $PSScriptRoot "python_client.py"
-& $Python @pythonArgsPrefix $client `
-    --base-url $BaseUrl `
-    --api-key $ApiKey `
-    --question $Question `
-    --top-k $TopK `
-    --max-tokens $MaxTokens
+$clientArgs = @(
+    $client,
+    "--api-key", $ApiKey,
+    "--question", $Question,
+    "--top-k", $TopK,
+    "--max-tokens", $MaxTokens
+)
+
+if ($BaseUrl) {
+    $clientArgs += @("--base-url", $BaseUrl)
+}
+
+& $Python @pythonArgsPrefix @clientArgs
 
 exit $LASTEXITCODE

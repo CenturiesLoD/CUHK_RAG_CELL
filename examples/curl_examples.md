@@ -3,8 +3,14 @@
 Set these values first:
 
 ```bash
-export CELL_RAG_DEMO_URL="https://your-public-demo-url"
+export CELL_RAG_DEMO_URL="https://dual-retrieval-specifically-fusion.trycloudflare.com"
 export CELL_RAG_DEMO_API_KEY="your-api-key"
+```
+
+If the quick-tunnel URL changes, check the stable endpoint manifest:
+
+```bash
+curl -s https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
 ```
 
 Check health:

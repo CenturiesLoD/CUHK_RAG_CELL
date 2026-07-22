@@ -39,7 +39,6 @@ Some CCI runtime images can create the tunnel but cannot resolve their own
 external client:
 
 ```bash
-export CELL_RAG_DEMO_URL="https://your-public-demo-url"
 export CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples/smoke_hosted_demo.py
 ```
@@ -48,7 +47,6 @@ On Windows:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
-  -BaseUrl "https://your-public-demo-url" `
   -ApiKey "your-api-key"
 ```
 
@@ -65,8 +63,40 @@ logs/public_demo_tunnel.<host>.url
 ```
 
 Cloudflare quick-tunnel URLs are ephemeral. If the tunnel process stops, the URL
-usually changes when restarted. A stable production URL requires a named
-Cloudflare Tunnel, a domain, or a CCI-managed public port mapping.
+usually changes when restarted.
+
+The repo provides a stable discovery manifest:
+
+```text
+docs/current_endpoint.json
+```
+
+Its GitHub raw URL is stable:
+
+```text
+https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+```
+
+The example clients use this manifest automatically when `CELL_RAG_DEMO_URL` or
+`--base-url` is not provided. After restarting the quick tunnel, update the
+manifest on CCI:
+
+```bash
+scripts/publish_public_endpoint.sh
+```
+
+Set `PUBLISH_ENDPOINT_PUSH=1` if the CCI checkout has GitHub push credentials and
+you want the script to push the manifest update:
+
+```bash
+PUBLISH_ENDPOINT_PUSH=1 scripts/publish_public_endpoint.sh
+```
+
+A true stable API hostname requires one of these infrastructure options:
+
+- Cloudflare Named Tunnel plus a domain, such as `https://cell-rag.example.com`;
+- a CCI-managed public port mapping with a stable hostname;
+- another stable reverse proxy in front of the CCI backend.
 
 ## API Key
 
