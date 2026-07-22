@@ -1,0 +1,33 @@
+{"query":"T cell","expected_doc_ids":["CL:0000084"],"top_k":5,"require_hit_at_1":true}
+{"query":"What is a T cell?","expected_doc_ids":["CL:0000084"],"top_k":5,"require_hit_at_1":true}
+{"query":"regulatory T cell","expected_doc_ids":["CL:0000815"],"top_k":5,"require_hit_at_1":true}
+{"query":"Treg","expected_doc_ids":["CL:0000815"],"top_k":5,"require_hit_at_1":true}
+{"query":"fibroblast","expected_doc_ids":["CL:0000057"],"top_k":5,"require_hit_at_1":true}
+{"query":"neuron","expected_doc_ids":["CL:0000540"],"top_k":5,"require_hit_at_1":true}
+{"query":"MS4A1","expected_doc_ids":["HGNC:7315"],"top_k":5,"require_hit_at_1":true}
+{"query":"CD20","expected_doc_ids":["HGNC:7315"],"top_k":5,"require_hit_at_1":true}
+{"query":"FOXP3","expected_doc_ids":["HGNC:6106"],"top_k":5,"require_hit_at_1":true}
+{"query":"forkhead box P3","expected_doc_ids":["HGNC:6106"],"top_k":5,"require_hit_at_1":true}
+{"query":"P11836","expected_doc_ids":["UniProt:P11836"],"top_k":5,"require_hit_at_1":true}
+{"query":"What does CD20 do?","expected_doc_ids":["UniProt:P11836"],"top_k":5,"require_hit_at_1":true,"expected_top_source_type":"protein_function","expected_source_intent":"protein_function","forbidden_top_source_types":["gene_nomenclature","gene_reference"],"min_confidence":"high"}
+{"query":"What is the function of MS4A1?","expected_doc_ids":["UniProt:P11836"],"top_k":5,"require_hit_at_1":true}
+{"query":"What is the function of FOXP3?","expected_doc_ids":["UniProt:Q9BZS1"],"top_k":5,"require_hit_at_1":true}
+{"query":"What markers identify Tregs?","expected_doc_ids":["cellmarker3:human:tregs:cl_0000084:ea90777c"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["FOXP3","IL2RA"],"expected_top_source_type":"cell_marker_database","expected_source_intent":"cell_markers","forbidden_top_source_types":["gene_nomenclature","gene_reference","protein_function"],"min_confidence":"high"}
+{"query":"Which cell type markers include FOXP3 and IL2RA?","expected_doc_ids":["panglaodb:mm_hs:t_regulatory_cells:cb67ca85"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["FOXP3","IL2RA"]}
+{"query":"What markers identify B cells naive?","expected_doc_ids":["panglaodb:hs:b_cells_naive:727f3c8d"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["CD1C","FCER2"]}
+{"query":"What is the NCBI Gene ID for MS4A1?","expected_doc_ids":["NCBIGene:931"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["931","MS4A1"],"expected_top_source_type":"gene_reference","expected_source_intent":"gene_reference","forbidden_top_source_types":["gene_nomenclature","protein_function"],"min_confidence":"high"}
+{"query":"What chromosome is FOXP3 on according to NCBI Gene?","expected_doc_ids":["NCBIGene:50943"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["chromosome X","FOXP3"],"expected_top_source_type":"gene_reference","expected_source_intent":"gene_reference","forbidden_top_source_types":["gene_nomenclature","protein_function"],"min_confidence":"high"}
+{"query":"blood","expected_doc_ids":["UBERON:0000178"],"top_k":5,"require_hit_at_1":true,"expected_top_source_type":"anatomy_ontology","expected_source_intent":"anatomy","forbidden_top_source_types":["single_cell_atlas_metadata"],"min_confidence":"high"}
+{"query":"liver","expected_doc_ids":["UBERON:0002107"],"top_k":5,"require_hit_at_1":true}
+{"query":"apoptotic process","expected_doc_ids":["GO:0006915"],"top_k":5,"require_hit_at_1":true,"expected_top_source_type":"gene_ontology","min_confidence":"high"}
+{"query":"increased size","expected_doc_ids":["PATO:0000586"],"top_k":5,"require_hit_at_1":true}
+{"query":"red","expected_doc_ids":["PATO:0000322"],"top_k":5,"require_hit_at_1":true}
+{"query":"What is the Entrez Gene ID for FOXP3?","expected_doc_ids":["NCBIGene:50943"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["50943","FOXP3"],"expected_top_source_type":"gene_reference","expected_source_intent":"gene_reference","forbidden_top_source_types":["gene_nomenclature","protein_function"],"min_confidence":"high"}
+{"query":"What is the official gene symbol for CD20?","expected_doc_ids":["HGNC:7315"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["MS4A1","HGNC"],"expected_top_source_type":"gene_nomenclature","expected_source_intent":"gene_nomenclature","forbidden_top_source_types":["protein_function","gene_reference"],"min_confidence":"high"}
+{"query":"What is the molecular function DNA binding?","expected_doc_ids":["GO:0003677"],"top_k":5,"require_hit_at_1":true}
+{"query":"Which marker database entry includes CD1C and FCER2 for naive B cells?","expected_doc_ids":["panglaodb:hs:b_cells_naive:727f3c8d"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["CD1C","FCER2"],"expected_top_source_type":"cell_marker_database","expected_source_intent":"cell_markers","forbidden_top_source_types":["gene_nomenclature","gene_reference","protein_function"],"min_confidence":"high"}
+{"query":"What gene does CD20 refer to?","expected_doc_ids":["HGNC:7315"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["MS4A1","HGNC"],"expected_top_source_type":"gene_nomenclature","expected_source_intent":"gene_nomenclature","forbidden_top_source_types":["protein_function"],"min_confidence":"high"}
+{"query":"What is IL2RA?","expected_doc_ids":["HGNC:6008"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["IL2RA","HGNC"],"expected_top_source_type":"gene_nomenclature","expected_source_intent":"gene_nomenclature","forbidden_top_source_types":["protein_function","cell_marker_database"],"min_confidence":"high"}
+{"query":"What does IL2RA do?","expected_doc_ids":["UniProt:P01589"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["IL2RA"],"expected_top_source_type":"protein_function","expected_source_intent":"protein_function","forbidden_top_source_types":["gene_nomenclature","gene_reference"],"min_confidence":"high"}
+{"query":"What marker database entry includes MS4A1 for B cells?","expected_doc_ids":["cellmarker3:human:naive_b_cell:cl_0002396:f7c2ce5d"],"top_k":5,"require_hit_at_1":true,"top_must_contain":["MS4A1"],"expected_top_source_type":"cell_marker_database","expected_source_intent":"cell_markers","forbidden_top_source_types":["gene_nomenclature","gene_reference","protein_function"],"min_confidence":"high"}
+{"query":"CELLxGENE Census evidence for T cell in liver normal 10x 3 v3","expected_doc_ids":["cellxgene_census:cl_0000084:uberon_0002107:normal:10x_3_v3:84"],"top_k":5,"require_hit_at_1":true,"expected_top_source_type":"single_cell_atlas_metadata","expected_source_intent":"dataset_evidence","forbidden_top_source_types":["cell_ontology","anatomy_ontology"],"min_confidence":"high"}

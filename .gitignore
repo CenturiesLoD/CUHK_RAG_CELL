@@ -1,0 +1,85 @@
+# Secrets and local machine config
+.env
+.env.*
+!.env.example
+secrets/
+*.key
+*.pem
+*.crt
+*.token
+
+# Runtime logs, reports, and handoff bundles
+logs/
+reports/
+*.log
+
+# Large model/data artifacts generated or downloaded on CCI
+models/
+sources/
+raw/
+processed/
+chunks/
+embeddings/
+tools/
+
+# Standalone generated vector/index artifacts, in case they are moved outside embeddings/
+*.npz
+*.npy
+*.faiss
+*.index
+*.sqlite
+*.sqlite3
+*.db
+
+# Large downloaded source archives and tabular dumps
+*.zip
+*.gz
+*.tar
+*.tar.gz
+*.tgz
+*.parquet
+*.arrow
+*.h5ad
+*.loom
+*.safetensors
+
+# Python caches and test/build output
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+qwen_env/
+vllm_env/
+.venv/
+venv/
+env/
+cellxgene-test-env/
+
+# Node or frontend tooling, if added later
+node_modules/
+.next/
+out/
+coverage/
+
+# Local cache directories
+.cache/
+huggingface/
+hf_cache/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo

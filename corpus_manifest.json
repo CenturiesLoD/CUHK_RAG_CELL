@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "default_corpus": "cell_ontology_cl",
+  "corpora": [
+    {
+      "id": "cell_ontology_cl",
+      "source_type": "cell_ontology",
+      "data_version": "releases/2026-06-08",
+      "terms_path": "processed/cl_terms.jsonl",
+      "aliases_path": "processed/cl_aliases.jsonl",
+      "chunks_path": "chunks/cl_chunks.jsonl",
+      "embedding_model": "models/Qwen3-Embedding-8B",
+      "embeddings_path": "embeddings/cl_qwen3_embedding_8b.npz",
+      "metadata_path": "embeddings/cl_qwen3_embedding_8b.metadata.json",
+      "chunk_count": 3335,
+      "embedding_dimension": 4096
+    }
+  ],
+  "expansion": {
+    "jsonl_builder": "src/build_jsonl_corpus.py",
+    "expanded_build_script": "scripts/build_extra_jsonl_corpus.sh",
+    "server_path_overrides": [
+      "RAG_CHUNKS_PATH",
+      "RAG_ALIASES_PATH",
+      "RAG_EMBEDDINGS_PATH",
+      "RAG_METADATA_PATH",
+      "RAG_MODEL_PATH"
+    ]
+  },
+  "evaluation": {
+    "cases_path": "eval/queries.jsonl",
+    "runner": "scripts/run_retrieval_eval.sh"
+  }
+}
