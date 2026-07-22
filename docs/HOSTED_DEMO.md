@@ -21,7 +21,7 @@ On CCI:
 
 ```bash
 cd /data/L202500484/cell_rag
-scripts/ensure_hosted_demo.sh
+scripts/init_public_demo.sh
 ```
 
 The script:
@@ -32,7 +32,26 @@ The script:
 - restarts the public API wrapper so auth is active;
 - installs `tools/cloudflared` if missing;
 - starts a public quick tunnel;
+- writes the current public URL to `docs/current_endpoint.json`;
 - attempts a server-side public smoke test.
+
+To force a new quick-tunnel URL:
+
+```bash
+scripts/init_public_demo.sh --restart-tunnel
+```
+
+To update the GitHub endpoint manifest from CCI after generating a URL:
+
+```bash
+scripts/init_public_demo.sh --publish-endpoint
+```
+
+From Windows, if SSH access to CCI is configured:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1
+```
 
 Some CCI runtime images can create the tunnel but cannot resolve their own
 `trycloudflare.com` hostname. In that case, verify the public URL from an
@@ -82,7 +101,7 @@ The example clients use this manifest automatically when `CELL_RAG_DEMO_URL` or
 manifest on CCI:
 
 ```bash
-scripts/publish_public_endpoint.sh
+scripts/init_public_demo.sh --publish-endpoint
 ```
 
 Set `PUBLISH_ENDPOINT_PUSH=1` if the CCI checkout has GitHub push credentials and

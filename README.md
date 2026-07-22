@@ -141,6 +141,44 @@ Expected smoke-test behavior:
 - authenticated `POST /search` returns retrieved source records.
 - `citation_check.passed` is `true`.
 
+## Initialize The Hosted Demo
+
+Use this before sharing or testing the hosted backend. It runs on the CCI runtime
+and creates or refreshes the public URL.
+
+From CCI:
+
+```bash
+cd /data/L202500484/cell_rag
+scripts/init_public_demo.sh
+```
+
+From Windows, using SSH:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1
+```
+
+Force a fresh quick-tunnel URL:
+
+```bash
+scripts/init_public_demo.sh --restart-tunnel
+```
+
+Update and push the GitHub endpoint manifest after generating a URL:
+
+```bash
+scripts/init_public_demo.sh --publish-endpoint
+```
+
+If the CCI checkout does not have GitHub push credentials, run the init command,
+copy the printed URL into `docs/current_endpoint.json`, then commit and push from
+a machine that has GitHub access.
+
+This does not make Cloudflare quick tunnels permanent. It makes URL rotation
+operational: the server operator refreshes the URL, the repo stores the current
+URL in one stable manifest, and client scripts discover it automatically.
+
 ## API Usage
 
 ### Health
@@ -215,7 +253,7 @@ scripts/status_all.sh
 Start or repair the public hosted API:
 
 ```bash
-scripts/ensure_hosted_demo.sh
+scripts/init_public_demo.sh
 scripts/status_public_demo_tunnel.sh
 ```
 
