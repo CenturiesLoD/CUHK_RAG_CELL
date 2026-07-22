@@ -12,7 +12,7 @@ raw source file or API
   -> optional FAISS ANN vector index
   -> optional neural reranker
   -> answer grounding and citation audit
-  -> mentor-facing API wrapper
+  -> public API wrapper
   -> optional public hosted-demo tunnel
   -> live RAG service
 ```
@@ -26,7 +26,7 @@ raw source file or API
 - `models/`: local embedding, reranker, and LLM model snapshots.
 - `sources/source_registry.json`: server-side provenance and intended-use metadata for every active source.
 - `eval/`: retrieval and answer smoke tests.
-- `scripts/mentor_rag_api_tunnel.ps1`: Windows helper for local mentor demos over SSH tunneling.
+- `scripts/ensure_cell_rag_stack.ps1`: Windows helper for remote stack startup.
 - `docs/HOSTED_DEMO.md`: hosted public demo backend workflow.
 
 The `models/`, `sources/`, `raw/`, `processed/`, `chunks/`, `embeddings/`,
@@ -47,7 +47,7 @@ model loading, retrieval artifacts, and source-data storage.
 | `scripts/build_combined_rag_with_cellxgene.sh` | Combined runtime corpus | `chunks/rag_chunks.jsonl`, `processed/rag_aliases.jsonl`, `embeddings/rag_qwen3_embedding_8b.npz` |
 | `scripts/build_faiss_index.sh` | Optional FAISS ANN index | `embeddings/rag_qwen3_embedding_8b.ivfflat.faiss` |
 | `scripts/download_reranker_model.sh` | Optional neural reranker model | `models/ms-marco-MiniLM-L-6-v2` |
-| `scripts/start_mentor_api.sh` | Mentor-facing API wrapper | `http://127.0.0.1:8020` |
+| `scripts/start_public_api.sh` | Public API wrapper | `http://127.0.0.1:8020` |
 | `scripts/ensure_hosted_demo.sh` | Public hosted demo backend | Cloudflare quick-tunnel URL |
 
 ## Rebuild Order
@@ -93,7 +93,7 @@ scripts/run_retrieval_eval.sh
 scripts/run_retrieval_eval.sh --cases eval/cellxgene_queries.jsonl
 scripts/run_answer_eval.sh
 scripts/run_answer_eval.sh --cases eval/cellxgene_answer_cases.jsonl
-scripts/smoke_mentor_api.sh
+scripts/smoke_public_api.sh
 ```
 
 When the neural reranker is loaded, compare with and without it:
@@ -109,7 +109,7 @@ Or run the full validation and smoke-test sequence:
 scripts/smoke_all.sh
 ```
 
-For a handoff-ready run with saved logs:
+For a reproducible run with saved logs:
 
 ```bash
 scripts/audit_all.sh
@@ -136,8 +136,8 @@ The full stack is:
 
 - local vLLM server serving `qwen3-32b` on `127.0.0.1:8000/v1`
 - FastAPI RAG server on `127.0.0.1:8010`
-- FastAPI mentor API wrapper on `127.0.0.1:8020`
-- optional Cloudflare quick tunnel exposing the mentor API through a public HTTPS URL
+- FastAPI public API wrapper on `127.0.0.1:8020`
+- optional Cloudflare quick tunnel exposing the public API through a public HTTPS URL
 - vector retrieval backend selected by `RAG_VECTOR_BACKEND`, either `exact` or `faiss`
 - optional cross-encoder reranker selected by `RAG_RERANKER_ENABLED`
 - structured citation audit returned by `/answer` as `citation_check`
@@ -196,8 +196,8 @@ answer citations, valid and invalid citations, uncited factual-looking claim
 units, and a `passed` flag. Answer smoke tests require this field to exist and
 pass, so citation regressions are caught through the normal eval path.
 
-The mentor API in `src/mentor_api_server.py` exposes a smaller surface for live
-demonstration:
+The public API wrapper exposes a smaller surface
+for live demonstration:
 
 - `GET /health`
 - `GET /examples`
@@ -205,9 +205,9 @@ demonstration:
 - `POST /search`
 
 It calls the internal RAG API rather than loading models itself. By default it
-binds only to `127.0.0.1`; use the Windows tunnel script for mentor demos.
+binds only to `127.0.0.1`; use the Windows tunnel script for local external access.
 
-For mentor access without SSH, use the hosted demo backend:
+For external access without SSH, use the hosted demo backend:
 
 ```bash
 scripts/ensure_hosted_demo.sh
@@ -215,7 +215,7 @@ scripts/status_public_demo_tunnel.sh
 ```
 
 This starts an outbound Cloudflare quick tunnel from the CCI server to the
-localhost mentor API. The model remains hosted on CCI; the public URL only
+localhost public API wrapper. The model remains hosted on CCI; the public URL only
 forwards API requests to the CCI runtime. Because quick-tunnel URLs are
 ephemeral, use a named Cloudflare Tunnel, custom domain, or CCI port mapping for
 a stable long-lived demo URL.

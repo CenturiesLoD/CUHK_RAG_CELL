@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal client for the hosted Cell RAG mentor API."""
+"""Minimal client for the hosted Cell RAG API."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import urllib.request
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Query the hosted Cell RAG mentor API.")
+    parser = argparse.ArgumentParser(description="Query the hosted Cell RAG API.")
     parser.add_argument("--base-url", default=os.environ.get("CELL_RAG_DEMO_URL", "http://127.0.0.1:8020"))
     parser.add_argument("--api-key", default=os.environ.get("CELL_RAG_DEMO_API_KEY", ""))
     parser.add_argument("--question", default="What is a regulatory T cell?")

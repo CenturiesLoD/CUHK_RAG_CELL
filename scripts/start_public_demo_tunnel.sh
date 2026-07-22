@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST_ID="$(hostname -s)"
 CLOUDFLARED="${CLOUDFLARED:-$ROOT/tools/cloudflared}"
-MENTOR_API_BASE_URL="${MENTOR_API_BASE_URL:-http://127.0.0.1:8020}"
+PUBLIC_API_BASE_URL="${PUBLIC_API_BASE_URL:-http://127.0.0.1:8020}"
 PIDFILE="${PUBLIC_DEMO_TUNNEL_PIDFILE:-$ROOT/logs/public_demo_tunnel.$HOST_ID.pid}"
 LOGFILE="${PUBLIC_DEMO_TUNNEL_LOGFILE:-$ROOT/logs/public_demo_tunnel.$HOST_ID.log}"
 URLFILE="${PUBLIC_DEMO_TUNNEL_URLFILE:-$ROOT/logs/public_demo_tunnel.$HOST_ID.url}"
@@ -16,8 +16,8 @@ if [[ ! -x "$CLOUDFLARED" ]]; then
     exit 1
 fi
 
-if ! curl -fsS "$MENTOR_API_BASE_URL/health" >/dev/null 2>&1; then
-    echo "Mentor API is not healthy at $MENTOR_API_BASE_URL/health. Run scripts/ensure_stack.sh first."
+if ! curl -fsS "$PUBLIC_API_BASE_URL/health" >/dev/null 2>&1; then
+    echo "Public API is not healthy at $PUBLIC_API_BASE_URL/health. Run scripts/ensure_stack.sh first."
     exit 1
 fi
 
@@ -34,7 +34,7 @@ if [[ -f "$PIDFILE" ]]; then
 fi
 
 : > "$LOGFILE"
-nohup setsid "$CLOUDFLARED" tunnel --url "$MENTOR_API_BASE_URL" --no-autoupdate >> "$LOGFILE" 2>&1 < /dev/null &
+nohup setsid "$CLOUDFLARED" tunnel --url "$PUBLIC_API_BASE_URL" --no-autoupdate >> "$LOGFILE" 2>&1 < /dev/null &
 PID=$!
 echo "$PID" > "$PIDFILE"
 

@@ -5,13 +5,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 PYTHON="${PYTHON:-$ROOT/qwen_env/bin/python}"
-HOST="${MENTOR_API_HOST:-127.0.0.1}"
-PORT="${MENTOR_API_PORT:-8020}"
-BASE_URL="${MENTOR_API_BASE_URL:-http://$HOST:$PORT}"
-KEY_FILE="${MENTOR_API_KEY_FILE:-$ROOT/secrets/mentor_api_key.txt}"
+HOST="${PUBLIC_API_HOST:-127.0.0.1}"
+PORT="${PUBLIC_API_PORT:-8020}"
+BASE_URL="${PUBLIC_API_BASE_URL:-http://$HOST:$PORT}"
+KEY_FILE="${PUBLIC_API_KEY_FILE:-$ROOT/secrets/public_api_key.txt}"
 
 export CELL_RAG_ROOT="$ROOT"
-export MENTOR_API_KEY_FILE="$KEY_FILE"
+export PUBLIC_API_KEY_FILE="$KEY_FILE"
 
 "$PYTHON" - <<'PY'
 import json
@@ -31,15 +31,15 @@ if env_path.exists():
         key, value = line.split("=", 1)
         os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
-base_url = os.environ.get("MENTOR_API_BASE_URL") or (
+base_url = os.environ.get("PUBLIC_API_BASE_URL") or (
     "http://"
-    + os.environ.get("MENTOR_API_HOST", "127.0.0.1")
+    + os.environ.get("PUBLIC_API_HOST", "127.0.0.1")
     + ":"
-    + os.environ.get("MENTOR_API_PORT", "8020")
+    + os.environ.get("PUBLIC_API_PORT", "8020")
 )
-api_key = os.environ.get("MENTOR_API_KEY", "").strip()
+api_key = os.environ.get("PUBLIC_API_KEY", "").strip()
 if not api_key:
-    key_file = Path(os.environ.get("MENTOR_API_KEY_FILE", ""))
+    key_file = Path(os.environ.get("PUBLIC_API_KEY_FILE", ""))
     if key_file.exists():
         api_key = key_file.read_text(encoding="utf-8").strip()
 headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}

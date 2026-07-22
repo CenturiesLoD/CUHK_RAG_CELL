@@ -8,17 +8,17 @@ LLM_HOST="${LLM_HOST:-127.0.0.1}"
 LLM_PORT="${LLM_PORT:-8000}"
 RAG_HOST="${RAG_HOST:-127.0.0.1}"
 RAG_PORT="${RAG_PORT:-8010}"
-MENTOR_API_HOST="${MENTOR_API_HOST:-127.0.0.1}"
-MENTOR_API_PORT="${MENTOR_API_PORT:-8020}"
+PUBLIC_API_HOST="${PUBLIC_API_HOST:-127.0.0.1}"
+PUBLIC_API_PORT="${PUBLIC_API_PORT:-8020}"
 
 LLM_WAIT_SECONDS="${ENSURE_LLM_WAIT_SECONDS:-1500}"
 RAG_WAIT_SECONDS="${ENSURE_RAG_WAIT_SECONDS:-300}"
-MENTOR_API_WAIT_SECONDS="${ENSURE_MENTOR_API_WAIT_SECONDS:-120}"
+PUBLIC_API_WAIT_SECONDS="${ENSURE_PUBLIC_API_WAIT_SECONDS:-120}"
 POLL_SECONDS="${ENSURE_POLL_SECONDS:-5}"
 
 LLM_HEALTH_URL="http://$LLM_HOST:$LLM_PORT/v1/models"
 RAG_HEALTH_URL="http://$RAG_HOST:$RAG_PORT/health"
-MENTOR_API_HEALTH_URL="http://$MENTOR_API_HOST:$MENTOR_API_PORT/health"
+PUBLIC_API_HEALTH_URL="http://$PUBLIC_API_HOST:$PUBLIC_API_PORT/health"
 
 health_ok() {
     curl -fsS "$1" >/dev/null 2>&1
@@ -86,7 +86,7 @@ echo "started_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 ensure_service "LLM server" "$LLM_HEALTH_URL" "$ROOT/scripts/start_llm_server.sh" "$ROOT/scripts/stop_llm_server.sh" "$LLM_WAIT_SECONDS" true
 ensure_service "RAG server" "$RAG_HEALTH_URL" "$ROOT/scripts/start_rag_server.sh" "$ROOT/scripts/stop_rag_server.sh" "$RAG_WAIT_SECONDS" true
-ensure_service "Mentor API server" "$MENTOR_API_HEALTH_URL" "$ROOT/scripts/start_mentor_api.sh" "$ROOT/scripts/stop_mentor_api.sh" "$MENTOR_API_WAIT_SECONDS" true
+ensure_service "Public API server" "$PUBLIC_API_HEALTH_URL" "$ROOT/scripts/start_public_api.sh" "$ROOT/scripts/stop_public_api.sh" "$PUBLIC_API_WAIT_SECONDS" true
 
 echo
 echo "== Final status =="
@@ -94,4 +94,4 @@ echo "== Final status =="
 
 echo
 echo "Stack ready."
-echo "Mentor API URL on server: http://$MENTOR_API_HOST:$MENTOR_API_PORT/docs"
+echo "Public API URL on server: http://$PUBLIC_API_HOST:$PUBLIC_API_PORT/docs"

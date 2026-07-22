@@ -15,7 +15,7 @@ not the default runtime target.
 - `sources/source_registry.json`: server-side source provenance, license, scope, and intended use.
 
 These runtime files are kept on CCI. They are intentionally excluded from the
-GitHub repo so a mentor can clone the code and call the hosted API without
+GitHub repo so the code can be cloned and used against the hosted API without
 downloading models or rebuilding source artifacts.
 
 Current combined embedding summary:

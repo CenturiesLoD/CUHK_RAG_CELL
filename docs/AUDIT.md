@@ -45,10 +45,10 @@ Each audit directory contains:
 - `08_answer_eval_cellxgene.log`: CELLxGENE answer-grounding and citation-audit eval.
 - `09_status_final.log`: final server, model, vector backend, reranker, and GPU health.
 
-The mentor-facing API also has a focused smoke test:
+The public API wrapper also has a focused smoke test:
 
 ```bash
-scripts/smoke_mentor_api.sh
+scripts/smoke_public_api.sh
 ```
 
 It verifies `/health`, `/examples`, and `/ask`, including the returned
@@ -64,7 +64,7 @@ A passing audit means:
 - the configured vector backend and reranker load and report settings through `/health`;
 - retrieval routing still passes the current source-aware smoke tests;
 - generated answers pass citation and grounding hygiene checks, including the API-returned `citation_check`;
-- the mentor API can call the internal RAG API and return a cited answer through `/ask`;
+- the public API wrapper can call the internal RAG API and return a cited answer through `/ask`;
 - the stack remains healthy at the end of the run.
 
 ## What Passing Does Not Mean

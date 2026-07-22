@@ -7,7 +7,7 @@ cd "$ROOT"
 PYTHON="${PYTHON:-$ROOT/qwen_env/bin/python}"
 HOST_ID="$(hostname -s)"
 URLFILE="${PUBLIC_DEMO_TUNNEL_URLFILE:-$ROOT/logs/public_demo_tunnel.$HOST_ID.url}"
-KEY_FILE="${MENTOR_API_KEY_FILE:-$ROOT/secrets/mentor_api_key.txt}"
+KEY_FILE="${PUBLIC_API_KEY_FILE:-$ROOT/secrets/public_api_key.txt}"
 
 if [[ ! -s "$URLFILE" ]]; then
     echo "Public demo URL file missing: $URLFILE"
@@ -15,7 +15,7 @@ if [[ ! -s "$URLFILE" ]]; then
 fi
 
 BASE_URL="$(cat "$URLFILE")"
-API_KEY="${MENTOR_API_KEY:-$(cat "$KEY_FILE" 2>/dev/null || true)}"
+API_KEY="${PUBLIC_API_KEY:-$(cat "$KEY_FILE" 2>/dev/null || true)}"
 
 "$PYTHON" examples/smoke_hosted_demo.py \
     --base-url "$BASE_URL" \

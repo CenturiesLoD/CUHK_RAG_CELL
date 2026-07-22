@@ -1,4 +1,4 @@
-# Hosted Demo Backend
+# Hosted API Backend
 
 The GitHub repo contains the code, docs, tests, and client examples. The source
 registry, downloaded source files, processed corpus files, models, embeddings,
@@ -7,10 +7,10 @@ FAISS index, logs, reports, and secrets stay on the CCI server.
 Runtime path:
 
 ```text
-Mentor client
+Client
   -> public demo URL
   -> Cloudflare quick tunnel running on CCI
-  -> CCI localhost mentor API, port 8020
+  -> CCI localhost public API wrapper, port 8020
   -> CCI localhost RAG API, port 8010
   -> CCI localhost vLLM Qwen3-32B, port 8000
 ```
@@ -26,10 +26,10 @@ scripts/ensure_hosted_demo.sh
 
 The script:
 
-- ensures the LLM, RAG API, and mentor API are healthy;
-- generates or reuses `secrets/mentor_api_key.txt`;
-- updates `.env` with `MENTOR_API_KEY`;
-- restarts the mentor API so auth is active;
+- ensures the LLM, RAG API, and public API wrapper are healthy;
+- generates or reuses the hosted API key file;
+- updates `.env` with `PUBLIC_API_KEY`;
+- restarts the public API wrapper so auth is active;
 - installs `tools/cloudflared` if missing;
 - starts a public quick tunnel;
 - attempts a server-side public smoke test.
@@ -40,7 +40,7 @@ external client:
 
 ```bash
 export CELL_RAG_DEMO_URL="https://your-public-demo-url"
-export CELL_RAG_DEMO_API_KEY="your-mentor-api-key"
+export CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples/smoke_hosted_demo.py
 ```
 
@@ -49,7 +49,7 @@ On Windows:
 ```powershell
 powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
   -BaseUrl "https://your-public-demo-url" `
-  -ApiKey "your-mentor-api-key"
+  -ApiKey "your-api-key"
 ```
 
 ## Find The URL
@@ -70,19 +70,19 @@ Cloudflare Tunnel, a domain, or a CCI-managed public port mapping.
 
 ## API Key
 
-The mentor API key is stored on CCI at:
+The public API key is stored on CCI at:
 
 ```text
-secrets/mentor_api_key.txt
+secrets/public_api_key.txt
 ```
 
 Requests to `/ask` and `/search` must include:
 
 ```text
-Authorization: Bearer <mentor-api-key>
+Authorization: Bearer <api-key>
 ```
 
-## Mentor Endpoints
+## Public Endpoints
 
 - `GET /health`
 - `GET /examples`

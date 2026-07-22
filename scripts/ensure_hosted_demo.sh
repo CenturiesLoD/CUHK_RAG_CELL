@@ -8,13 +8,13 @@ echo "== Ensure local RAG stack =="
 scripts/ensure_stack.sh
 
 echo
-echo "== Configure mentor API auth =="
-scripts/configure_mentor_api_auth.sh
+echo "== Configure public API auth =="
+scripts/configure_public_api_auth.sh
 
 echo
-echo "== Restart mentor API to load auth config =="
-scripts/stop_mentor_api.sh || true
-scripts/start_mentor_api.sh
+echo "== Restart public API to load auth config =="
+scripts/stop_public_api.sh || true
+scripts/start_public_api.sh
 
 echo
 echo "== Install public tunnel binary =="

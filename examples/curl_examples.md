@@ -4,7 +4,7 @@ Set these values first:
 
 ```bash
 export CELL_RAG_DEMO_URL="https://your-public-demo-url"
-export CELL_RAG_DEMO_API_KEY="your-mentor-api-key"
+export CELL_RAG_DEMO_API_KEY="your-api-key"
 ```
 
 Check health:

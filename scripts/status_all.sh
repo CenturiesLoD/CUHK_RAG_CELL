@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Shows one compact dashboard for the local RAG stack.
 # - RAG: FastAPI retrieval/answer API on port 8010.
-# - Mentor API: demonstration wrapper on port 8020.
-# - Public demo tunnel: optional outbound tunnel for mentor access without SSH.
+# - Public API: wrapper on port 8020.
+# - Public demo tunnel: optional outbound tunnel for HTTPS access.
 # - LLM: vLLM OpenAI-compatible Qwen3-32B server on port 8000.
 # - GPU: current memory pressure, important because this stack is VRAM-tight.
 
@@ -18,8 +18,8 @@ echo "== RAG server =="
 "$ROOT/scripts/status_rag_server.sh" || true
 
 echo
-echo "== Mentor API server =="
-"$ROOT/scripts/status_mentor_api.sh" || true
+echo "== Public API server =="
+"$ROOT/scripts/status_public_api.sh" || true
 
 echo
 echo "== Public demo tunnel =="
@@ -43,4 +43,4 @@ fi
 
 echo
 echo "== Stack processes =="
-ps -ef | grep -E 'rag_search_server|mentor_api_server|cloudflared|vllm.entrypoints.openai.api_server|uvicorn rag_search_server|uvicorn mentor_api_server' | grep -v grep || echo "No stack processes found."
+ps -ef | grep -E 'rag_search_server|public_api_server|cloudflared|vllm.entrypoints.openai.api_server|uvicorn rag_search_server|uvicorn public_api_server' | grep -v grep || echo "No stack processes found."

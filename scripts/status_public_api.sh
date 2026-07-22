@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST_ID="$(hostname -s)"
-HOST="${MENTOR_API_HOST:-127.0.0.1}"
-PORT="${MENTOR_API_PORT:-8020}"
-PIDFILE="${MENTOR_API_PIDFILE:-$ROOT/logs/mentor_api_server.$HOST_ID.pid}"
+HOST="${PUBLIC_API_HOST:-127.0.0.1}"
+PORT="${PUBLIC_API_PORT:-8020}"
+PIDFILE="${PUBLIC_API_PIDFILE:-$ROOT/logs/public_api_server.$HOST_ID.pid}"
 
 if [[ -f "$PIDFILE" ]]; then
   PID="$(cat "$PIDFILE" || true)"

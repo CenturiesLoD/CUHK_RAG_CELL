@@ -36,7 +36,7 @@ function Wait-Health {
         }
     }
 
-    throw "Mentor API did not become reachable at $BaseUrl/health."
+    throw "Public API did not become reachable at $BaseUrl/health."
 }
 
 $baseUrl = "http://127.0.0.1:$LocalPort"
@@ -68,7 +68,7 @@ catch {
 }
 
 Write-Host ""
-Write-Host "Mentor API tunnel is ready."
+Write-Host "Public API tunnel is ready."
 Write-Host "Docs URL: $baseUrl/docs"
 Write-Host "Health: $($health.status), RAG: $($health.rag_status), backend: $($health.vector_backend), reranker_loaded: $($health.reranker_loaded)"
 
@@ -99,7 +99,7 @@ if (-not $NoSmokeTest) {
     catch {
         Write-Host ""
         Write-Host "Health succeeded, but /ask failed."
-        Write-Host "If the server has MENTOR_API_KEY set, rerun this script with -ApiKey <key>."
+        Write-Host "If the server requires an API key, rerun this script with -ApiKey <key>."
         throw
     }
 }
@@ -113,6 +113,6 @@ if ($OneShot) {
 }
 else {
     Write-Host "Tunnel process id: $($process.Id)"
-    Write-Host "Keep this PowerShell session open while mentors test the API."
+    Write-Host "Keep this PowerShell session open while the API is being tested."
     Write-Host "Stop the tunnel with: Stop-Process -Id $($process.Id)"
 }

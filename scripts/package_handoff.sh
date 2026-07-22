@@ -10,7 +10,7 @@ OUT_DIR="${1:-$HANDOFF_ROOT/$STAMP}"
 SUMMARY="$OUT_DIR/summary.txt"
 STATUS_TSV="$OUT_DIR/status.tsv"
 
-mkdir -p "$OUT_DIR"/{docs,logs,project_files,latest_audit,latest_demo,ann_reports,reranker_reports,citation_reports,mentor_reports,public_demo_reports,startup_ab_reports}
+mkdir -p "$OUT_DIR"/{docs,logs,project_files,latest_audit,latest_demo,ann_reports,reranker_reports,citation_reports,api_reports,public_demo_reports,startup_ab_reports}
 
 copy_project_file() {
     local src="$1"
@@ -112,15 +112,15 @@ cd /data/L202500484/cell_rag
 scripts/ensure_stack.sh
 scripts/ensure_hosted_demo.sh
 scripts/status_all.sh
-scripts/status_mentor_api.sh
+scripts/status_public_api.sh
 scripts/status_public_demo_tunnel.sh
 scripts/smoke_all.sh
-scripts/smoke_mentor_api.sh
+scripts/smoke_public_api.sh
 scripts/smoke_public_demo.sh
 scripts/audit_all.sh
 scripts/run_demo_pack.sh
 scripts/package_handoff.sh
-scripts/mentor_rag_api_tunnel.ps1
+scripts/ensure_cell_rag_stack.ps1
 scripts/ensure_cell_rag_stack.ps1
 ```
 
@@ -145,20 +145,20 @@ curl -s -X POST http://127.0.0.1:8010/answer \
   -d '{"question":"What markers identify regulatory T cells in blood?","top_k":8}'
 ```
 
-## Mentor API
+## Public API
 
-The mentor-facing API runs on the server at `127.0.0.1:8020` and wraps the
+The public API wrapper runs on the server at `127.0.0.1:8020` and wraps the
 internal RAG API with simpler endpoints:
 
 ```bash
-scripts/status_mentor_api.sh
-scripts/smoke_mentor_api.sh
+scripts/status_public_api.sh
+scripts/smoke_public_api.sh
 ```
 
 From Windows, run the local tunnel script:
 
 ```powershell
-scripts\mentor_rag_api_tunnel.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
+scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
 ```
 
 Then open:
@@ -170,7 +170,7 @@ http://127.0.0.1:8020/docs
 For a one-time connectivity check that closes the tunnel automatically:
 
 ```powershell
-scripts\mentor_rag_api_tunnel.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE> -OneShot
+scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
 ```
 
 ## Current Core Artifacts
@@ -183,7 +183,7 @@ scripts\mentor_rag_api_tunnel.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityF
 - `sources/source_registry.json`: server-side pinned source registry with URLs, licenses, versions, and ingestion status.
 
 The `/answer` response includes `citation_check`, which verifies that final answer citations refer to retrieved source block IDs.
-The mentor API `/ask` endpoint returns the same citation audit in a cleaner demonstration response.
+The public API `/ask` endpoint returns the same citation audit in a cleaner demonstration response.
 Use `scripts/ensure_stack.sh` for startup; it avoids restarting healthy services
 and waits for already-loading services before taking corrective action.
 Use `scripts/ensure_hosted_demo.sh` to start the public hosted demo backend.
@@ -208,7 +208,7 @@ write_handoff_summary() {
         echo "- docs/RAG_WORKFLOW.md"
         echo "- docs/HOSTED_DEMO.md"
         echo "- docs/AUDIT.md"
-        echo "- docs/HANDOFF.md"
+        echo "- docs/RELEASE_PACKAGE.md"
         echo "- examples/python_client.py"
         echo "- examples/smoke_hosted_demo.py"
         echo "- examples/windows_client.ps1"
@@ -239,7 +239,7 @@ write_handoff_summary() {
         echo "- ann_reports"
         echo "- reranker_reports"
         echo "- citation_reports"
-        echo "- mentor_reports"
+        echo "- api_reports"
         echo "- public_demo_reports"
         echo "- startup_ab_reports"
         echo
@@ -273,14 +273,14 @@ for path in \
     docs/RAG_WORKFLOW.md \
     docs/HOSTED_DEMO.md \
     docs/AUDIT.md \
-    docs/HANDOFF.md \
+    docs/RELEASE_PACKAGE.md \
     examples/python_client.py \
     examples/smoke_hosted_demo.py \
     examples/windows_client.ps1 \
     examples/curl_examples.md \
     requirements.txt \
     src/rag_search_server.py \
-    src/mentor_api_server.py \
+    src/public_api_server.py \
     src/build_faiss_index.py \
     src/evaluate_retrieval.py \
     src/evaluate_answers.py \
@@ -288,7 +288,7 @@ for path in \
     scripts/ensure_hosted_demo.sh \
     scripts/ensure_cell_rag_stack.ps1 \
     scripts/install_cloudflared.sh \
-    scripts/configure_mentor_api_auth.sh \
+    scripts/configure_public_api_auth.sh \
     scripts/start_public_demo_tunnel.sh \
     scripts/stop_public_demo_tunnel.sh \
     scripts/status_public_demo_tunnel.sh \
@@ -301,11 +301,10 @@ for path in \
     scripts/configure_fast_model_cache.sh \
     scripts/inspect_model_storage.sh \
     scripts/prepare_fast_model_cache.sh \
-    scripts/start_mentor_api.sh \
-    scripts/stop_mentor_api.sh \
-    scripts/status_mentor_api.sh \
-    scripts/smoke_mentor_api.sh \
-    scripts/mentor_rag_api_tunnel.ps1 \
+    scripts/start_public_api.sh \
+    scripts/stop_public_api.sh \
+    scripts/status_public_api.sh \
+    scripts/smoke_public_api.sh \
     scripts/build_faiss_index.sh \
     scripts/download_reranker_model.sh \
     scripts/run_retrieval_eval.sh \
@@ -339,8 +338,8 @@ if [[ -d reports/citation_audit ]]; then
     find reports/citation_audit -maxdepth 1 -type f -exec cp -a {} "$OUT_DIR/citation_reports"/ \;
 fi
 
-if [[ -d reports/mentor_api ]]; then
-    find reports/mentor_api -maxdepth 1 -type f -exec cp -a {} "$OUT_DIR/mentor_reports"/ \;
+if [[ -d reports/public_api ]]; then
+    find reports/public_api -maxdepth 1 -type f -exec cp -a {} "$OUT_DIR/api_reports"/ \;
 fi
 
 if [[ -d reports/public_demo ]]; then

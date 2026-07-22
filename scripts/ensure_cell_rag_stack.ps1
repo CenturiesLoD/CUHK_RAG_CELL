@@ -18,7 +18,7 @@ if (-not $IdentityFile) {
 }
 
 $target = "$User@$HostName"
-$tunnelScript = Join-Path $PSScriptRoot "mentor_rag_api_tunnel.ps1"
+$tunnelScript = Join-Path $PSScriptRoot "public_api_tunnel.ps1"
 $sshArgs = @(
     "-p", "$SshPort",
     "-i", "$IdentityFile",
@@ -44,11 +44,11 @@ Write-Host "Use the tunnel URL from this machine: http://127.0.0.1:8020/docs"
 
 if ($OpenTunnel) {
     Write-Host ""
-    Write-Host "Opening mentor API tunnel..."
+    Write-Host "Opening public API tunnel..."
     & powershell.exe -ExecutionPolicy Bypass -File $tunnelScript -HostName $HostName -SshPort $SshPort -User $User -IdentityFile $IdentityFile
 }
 else {
     Write-Host ""
     Write-Host "To open the tunnel now, run:"
-    Write-Host "powershell -ExecutionPolicy Bypass -File scripts\mentor_rag_api_tunnel.ps1 -HostName $HostName -IdentityFile `"$IdentityFile`""
+    Write-Host "powershell -ExecutionPolicy Bypass -File scripts\public_api_tunnel.ps1 -HostName $HostName -IdentityFile `"$IdentityFile`""
 }

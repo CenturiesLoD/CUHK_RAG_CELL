@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dependency-free smoke test for the hosted Cell RAG mentor API."""
+"""Dependency-free smoke test for the hosted Cell RAG API."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def request_json(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Smoke-test the hosted Cell RAG mentor API.")
+    parser = argparse.ArgumentParser(description="Smoke-test the hosted Cell RAG API.")
     parser.add_argument("--base-url", default=os.environ.get("CELL_RAG_DEMO_URL", ""))
     parser.add_argument("--api-key", default=os.environ.get("CELL_RAG_DEMO_API_KEY", ""))
     parser.add_argument("--question", default="What is a regulatory T cell?")

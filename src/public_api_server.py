@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mentor-facing API wrapper for the local Cell RAG service."""
+"""Public API wrapper for the local Cell RAG service."""
 
 from __future__ import annotations
 
@@ -28,14 +28,14 @@ def load_dotenv(path: Path) -> None:
 
 load_dotenv(ROOT / ".env")
 
-RAG_BASE_URL = os.environ.get("MENTOR_RAG_BASE_URL", "http://127.0.0.1:8010").rstrip("/")
-MENTOR_API_KEY = os.environ.get("MENTOR_API_KEY", "").strip()
-MAX_TOP_K = int(os.environ.get("MENTOR_MAX_TOP_K", "10"))
-MAX_SOURCE_TEXT_CHARS = int(os.environ.get("MENTOR_MAX_SOURCE_TEXT_CHARS", "700"))
-REQUEST_TIMEOUT = int(os.environ.get("MENTOR_RAG_TIMEOUT_SECONDS", "300"))
+RAG_BASE_URL = os.environ.get("PUBLIC_RAG_BASE_URL", "http://127.0.0.1:8010").rstrip("/")
+PUBLIC_API_KEY = os.environ.get("PUBLIC_API_KEY", "").strip()
+MAX_TOP_K = int(os.environ.get("PUBLIC_MAX_TOP_K", "10"))
+MAX_SOURCE_TEXT_CHARS = int(os.environ.get("PUBLIC_MAX_SOURCE_TEXT_CHARS", "700"))
+REQUEST_TIMEOUT = int(os.environ.get("PUBLIC_RAG_TIMEOUT_SECONDS", "300"))
 
 app = FastAPI(
-    title="Single-Cell RAG Mentor API",
+    title="Single-Cell RAG API",
     version="1.0.0",
     description=(
         "A small demonstration API for querying the local single-cell biology RAG "
@@ -65,7 +65,7 @@ def require_api_key(
     authorization: str | None = Header(default=None),
     x_api_key: str | None = Header(default=None),
 ) -> None:
-    if not MENTOR_API_KEY:
+    if not PUBLIC_API_KEY:
         return
 
     bearer_token = None
@@ -73,8 +73,8 @@ def require_api_key(
         bearer_token = authorization[7:].strip()
     supplied = bearer_token or x_api_key
 
-    if supplied != MENTOR_API_KEY:
-        raise HTTPException(status_code=401, detail="Missing or invalid mentor API key.")
+    if supplied != PUBLIC_API_KEY:
+        raise HTTPException(status_code=401, detail="Missing or invalid API key.")
 
 
 def rag_request(method: str, path: str, **kwargs: Any) -> dict[str, Any]:
@@ -122,13 +122,13 @@ def compact_source(source: dict[str, Any], include_text: bool = False) -> dict[s
 @app.get("/")
 def root() -> dict[str, Any]:
     return {
-        "service": "Single-Cell RAG Mentor API",
+        "service": "Single-Cell RAG API",
         "docs": "/docs",
         "health": "/health",
         "ask": "POST /ask",
         "search": "POST /search",
         "examples": "/examples",
-        "auth_required": bool(MENTOR_API_KEY),
+        "auth_required": bool(PUBLIC_API_KEY),
     }
 
 
@@ -138,8 +138,8 @@ def health() -> dict[str, Any]:
     rag_health = rag_request("GET", "/health")
     return {
         "status": "ok",
-        "mentor_api": "ok",
-        "auth_required": bool(MENTOR_API_KEY),
+        "public_api": "ok",
+        "auth_required": bool(PUBLIC_API_KEY),
         "rag_base_url": RAG_BASE_URL,
         "rag_status": rag_health.get("status"),
         "vector_backend": rag_health.get("vector_backend"),

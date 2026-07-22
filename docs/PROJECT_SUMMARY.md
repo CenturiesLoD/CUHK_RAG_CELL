@@ -46,7 +46,7 @@ raw source file or API export
   -> optional FAISS ANN vector index
   -> optional neural reranker
   -> answer grounding and citation audit
-  -> mentor-facing API wrapper
+  -> public API wrapper
   -> live RAG API
 ```
 
@@ -71,7 +71,7 @@ Current combined index:
 - embedding shape: `[325815, 4096]`
 - embedding model: `models/Qwen3-Embedding-8B`
 - answer model: local `qwen3-32b` served through vLLM
-- mentor API: `src/mentor_api_server.py` on `127.0.0.1:8020`
+- public API wrapper on `127.0.0.1:8020`
 
 ## Retrieval And Ranking
 
@@ -117,19 +117,19 @@ answers. Grounding controls currently include:
 - answer evaluation that checks required citations, source routing, abstention,
   the API citation audit, and obvious uncited factual claims.
 
-## Mentor Demonstration API
+## Public Demonstration API
 
-The mentor API is a lightweight wrapper around the internal RAG API. It does not
-load a second model and it does not change retrieval behavior. It exposes:
+The public API wrapper is a lightweight layer around the internal RAG API. It
+does not load a second model and it does not change retrieval behavior. It exposes:
 
 - `GET /health` for readiness;
 - `GET /examples` for suggested demo questions;
 - `POST /ask` for cited answers with retrieval quality and citation checks;
 - `POST /search` for retrieval-only inspection.
 
-For mentor access, it is intended to be reached through the hosted CCI demo URL
-created by `scripts/ensure_hosted_demo.sh`. The older Windows SSH tunnel script
-at `scripts\mentor_rag_api_tunnel.ps1` remains available for local debugging.
+For external access, it is intended to be reached through the hosted CCI demo URL
+created by `scripts/ensure_hosted_demo.sh`. SSH tunneling remains available for
+local debugging.
 
 ## Validation
 
@@ -137,7 +137,7 @@ Primary commands:
 
 ```bash
 scripts/smoke_all.sh
-scripts/smoke_mentor_api.sh
+scripts/smoke_public_api.sh
 scripts/audit_all.sh
 scripts/run_demo_pack.sh
 ```

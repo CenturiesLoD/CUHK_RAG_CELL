@@ -1,534 +1,389 @@
-# Cell RAG
+# CUHK RAG Cell
 
-This repository is the lightweight code, documentation, and client-example layer
-for a CCI-hosted single-cell biology RAG system.
+A Retrieval-Augmented Generation system for single-cell biology question answering.
 
-The mentor demo is intentionally server-backed: the Qwen3-32B model, embedding
-model, downloaded source files, processed records, chunks, embeddings, FAISS
-index, logs, reports, and API secrets stay on CCI. A mentor cloning this repo
-does not need to download the model or rebuild the corpus.
+The project combines curated biological sources, a vector index, hybrid retrieval,
+source-aware ranking, optional reranking, and a local Qwen3-32B answer model. The
+large runtime artifacts are hosted on CCI; this repository contains the code,
+documentation, examples, tests, and rebuild scripts.
 
-## Mentor Quickstart
+## What This Repo Contains
 
-Use the hosted CCI API URL and mentor API key provided separately:
+This is a lightweight repository. It does **not** include model weights or corpus
+artifacts.
 
-```powershell
-$env:CELL_RAG_DEMO_URL="https://your-public-demo-url"
-$env:CELL_RAG_DEMO_API_KEY="your-mentor-api-key"
-python examples\smoke_hosted_demo.py
-```
+Included:
 
-Or call it from PowerShell:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
-  -BaseUrl "https://your-public-demo-url" `
-  -ApiKey "your-mentor-api-key" `
-  -Question "What markers identify regulatory T cells?"
-```
-
-The client requests go to:
-
-```text
-mentor machine
-  -> public hosted demo URL
-  -> CCI Cloudflare quick tunnel
-  -> CCI mentor API on 127.0.0.1:8020
-  -> CCI RAG API on 127.0.0.1:8010
-  -> CCI vLLM Qwen3-32B endpoint on 127.0.0.1:8000/v1
-```
-
-## Repo Boundary
-
-The GitHub repo should contain code, docs, examples, eval cases, and scripts
-only. It should not contain runtime artifacts or source-data snapshots.
+- `src/`: API servers, corpus builders, retrieval, evaluation, and indexing code.
+- `scripts/`: startup, rebuild, smoke-test, audit, tunnel, and utility scripts.
+- `examples/`: small clients for the hosted API.
+- `eval/`: smoke-test retrieval and answer cases.
+- `demo/`: showcase questions.
+- `docs/`: source, workflow, hosted backend, and audit notes.
+- `.env.example`: configuration template.
 
 Excluded by `.gitignore`:
 
-- `models/`: local Hugging Face model snapshots and reranker weights.
-- `sources/`: source registry and source metadata snapshots kept on CCI.
+- `models/`: Hugging Face model snapshots and reranker weights.
+- `sources/`: server-side source registry and source metadata snapshots.
 - `raw/`: downloaded source files and API exports.
-- `processed/`: normalized JSONL records and alias files.
+- `processed/`: normalized records and alias files.
 - `chunks/`: retrievable chunk JSONL files.
 - `embeddings/`: `.npz` embedding matrices, metadata, and FAISS indexes.
-- `secrets/`: mentor API keys and local credentials.
-- `logs/` and `reports/`: generated runtime and audit output.
+- `secrets/`: API keys and local credentials.
+- `logs/` and `reports/`: generated runtime output.
 
-The CCI runtime keeps those files under:
+The full CCI runtime lives at:
 
 ```text
 /data/L202500484/cell_rag
 ```
 
-The fast model cache, when enabled, is runtime-only:
+## Current System
+
+Runtime stack:
 
 ```text
-/dev/shm/cell_rag_models/Qwen3-32B
+client
+  -> hosted HTTPS URL
+  -> Cloudflare quick tunnel on CCI
+  -> public API wrapper on 127.0.0.1:8020
+  -> RAG API on 127.0.0.1:8010
+  -> vLLM Qwen3-32B endpoint on 127.0.0.1:8000/v1
 ```
 
-## CCI Runtime
+Current corpus:
 
-The server-side `.env` points the CCI services at the combined RAG corpus:
+- `325,815` chunks.
+- `2,712,338` aliases.
+- Qwen3-Embedding-8B embeddings, dimension `4096`.
+- Optional FAISS IVF-Flat vector index enabled on CCI.
+- Optional MiniLM cross-encoder reranker enabled on CCI.
+- Qwen3-32B answer model served by vLLM.
 
-- chunks: `chunks/rag_chunks.jsonl`
-- aliases: `processed/rag_aliases.jsonl`
-- embeddings: `embeddings/rag_qwen3_embedding_8b.npz`
-- metadata: `embeddings/rag_qwen3_embedding_8b.metadata.json`
-- optional FAISS ANN index: `embeddings/rag_qwen3_embedding_8b.ivfflat.faiss`
-- embedding model: `models/Qwen3-Embedding-8B`
-- optional neural reranker: `models/ms-marco-MiniLM-L-6-v2`
-- answer model endpoint: `http://127.0.0.1:8000/v1`
-- answer model name: `qwen3-32b`
-- mentor-facing API endpoint: `http://127.0.0.1:8020`
+Active source families:
 
-For a new server runtime, copy `.env.example` to `.env` and adjust paths, model
-locations, API keys, and GPU assignments. The real `.env` file is intentionally
-ignored by Git.
+- Cell Ontology: cell type IDs, names, definitions, synonyms, hierarchy.
+- Uberon: tissues, organs, and anatomy context.
+- Gene Ontology: biological process, molecular function, cellular component terms.
+- PATO: phenotype quality terms.
+- CELLxGENE Census: summarized atlas metadata evidence.
+- HGNC: human gene symbols, names, aliases, and cross-references.
+- NCBI Gene: Entrez IDs, descriptions, chromosome/map-location metadata.
+- UniProtKB reviewed human: protein names, functions, GO links, cross-references.
+- CellMarker 3.0: marker gene sets.
+- PanglaoDB: curated marker gene associations.
 
-## CCI Operator Run
+## Quickstart: Hosted API
 
-Start the full stack from the project root:
+Use this path if the CCI backend is already running. You only need Python and the
+public API URL/key.
+
+Linux/macOS:
+
+```bash
+export CELL_RAG_DEMO_URL="https://your-public-api-url"
+export CELL_RAG_DEMO_API_KEY="your-api-key"
+python examples/smoke_hosted_demo.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:CELL_RAG_DEMO_URL="https://your-public-api-url"
+$env:CELL_RAG_DEMO_API_KEY="your-api-key"
+python examples\smoke_hosted_demo.py
+```
+
+Ask one question:
+
+```bash
+python examples/python_client.py \
+  --base-url "$CELL_RAG_DEMO_URL" \
+  --api-key "$CELL_RAG_DEMO_API_KEY" \
+  --question "What markers identify regulatory T cells?"
+```
+
+PowerShell wrapper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
+  -BaseUrl $env:CELL_RAG_DEMO_URL `
+  -ApiKey $env:CELL_RAG_DEMO_API_KEY `
+  -Question "What is a regulatory T cell?"
+```
+
+Expected smoke-test behavior:
+
+- `GET /health` returns `status: ok`.
+- `GET /examples` returns example questions.
+- unauthenticated `POST /ask` returns `401`.
+- authenticated `POST /ask` returns a cited answer.
+- authenticated `POST /search` returns retrieved source records.
+- `citation_check.passed` is `true`.
+
+## API Usage
+
+### Health
+
+```bash
+curl "$CELL_RAG_DEMO_URL/health"
+```
+
+### Ask
+
+```bash
+curl -s "$CELL_RAG_DEMO_URL/ask" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $CELL_RAG_DEMO_API_KEY" \
+  -d '{"question":"What is a regulatory T cell?","top_k":5,"max_tokens":300}'
+```
+
+The response includes:
+
+- `answer`: cited natural-language answer.
+- `sources`: compact source records used for the answer.
+- `retrieval_quality`: confidence/ranking metadata.
+- `citation_check`: machine-readable citation audit.
+
+### Search
+
+```bash
+curl -s "$CELL_RAG_DEMO_URL/search" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $CELL_RAG_DEMO_API_KEY" \
+  -d '{"query":"FOXP3 function","top_k":5}'
+```
+
+Use `/search` when you want retrieval results without generation.
+
+## How Retrieval Works
+
+The RAG API combines several ranking signals:
+
+1. Exact matching against curated aliases, ontology IDs, gene symbols, and accessions.
+2. BM25-style lexical scoring.
+3. Qwen3 vector similarity.
+4. Optional FAISS approximate nearest-neighbor candidate retrieval.
+5. Lightweight lexical reranking.
+6. Optional neural cross-encoder reranking.
+7. Source-aware ranking based on query type.
+
+Source-aware ranking helps route questions to the most appropriate source family:
+
+- cell definition questions prefer Cell Ontology;
+- tissue/anatomy questions prefer Uberon;
+- gene-symbol questions prefer HGNC;
+- Entrez/chromosome questions prefer NCBI Gene;
+- protein-function questions prefer UniProt;
+- marker questions prefer CellMarker/PanglaoDB;
+- atlas evidence questions prefer CELLxGENE Census summaries.
+
+The answer endpoint then builds a cited context prompt and calls the local
+OpenAI-compatible Qwen3-32B endpoint. It abstains when retrieval confidence is
+too low and returns a `citation_check` audit for the final answer.
+
+## Running On CCI
+
+Use this path only if you have access to the server-side runtime artifacts.
+
+```bash
+cd /data/L202500484/cell_rag
+scripts/ensure_stack.sh
+scripts/status_all.sh
+```
+
+Start or repair the public hosted API:
+
+```bash
+scripts/ensure_hosted_demo.sh
+scripts/status_public_demo_tunnel.sh
+```
+
+Run smoke tests:
+
+```bash
+scripts/smoke_all.sh
+scripts/smoke_public_demo.sh
+```
+
+Common service commands:
 
 ```bash
 scripts/start_all.sh
-```
-
-This delegates to `scripts/ensure_stack.sh`. It checks health first, avoids
-restarting healthy services, removes stale PID files through the service start
-scripts, waits for services that are already loading, and starts the local vLLM
-server, RAG FastAPI server, and mentor-facing API wrapper only when needed.
-
-From Windows, use the local wrapper:
-
-```powershell
-$env:CELL_RAG_SSH_HOST="<CCI_H100_HOSTNAME_OR_IP>"
-$env:CELL_RAG_SSH_KEY="$HOME\.ssh\public_key"
-powershell -ExecutionPolicy Bypass -File scripts\ensure_cell_rag_stack.ps1
-```
-
-Useful service commands:
-
-```bash
-scripts/ensure_stack.sh
+scripts/stop_all.sh
 scripts/status_all.sh
 scripts/status_rag_server.sh
 scripts/status_llm_server.sh
-scripts/status_mentor_api.sh
-scripts/stop_all.sh
+scripts/status_public_api.sh
 ```
 
-Cold startup is dominated by loading the 61GB Qwen3-32B weights into vLLM and
-warming kernels. A persistent SSH connection would reduce command overhead, but
-not the model load itself. The LLM startup script now uses vLLM safetensors
-prefetch by default:
+## Local Configuration
+
+For a new server runtime, copy:
+
+```bash
+cp .env.example .env
+```
+
+Then edit paths and service settings in `.env`.
+
+Important runtime paths:
+
+```text
+RAG_CHUNKS_PATH=chunks/rag_chunks.jsonl
+RAG_ALIASES_PATH=processed/rag_aliases.jsonl
+RAG_EMBEDDINGS_PATH=embeddings/rag_qwen3_embedding_8b.npz
+RAG_METADATA_PATH=embeddings/rag_qwen3_embedding_8b.metadata.json
+LLM_MODEL_PATH=models/Qwen3-32B
+LLM_MODEL_SOURCE_PATH=models/Qwen3-32B
+LLM_FAST_MODEL_CACHE_PATH=/dev/shm/cell_rag_models/Qwen3-32B
+```
+
+The real `.env` is ignored by Git.
+
+## Faster Model Startup
+
+Cold startup is dominated by:
+
+- loading the Qwen3-32B checkpoint;
+- allocating GPU memory;
+- vLLM compile/warmup work.
+
+The CCI runtime uses:
 
 ```bash
 LLM_SAFETENSORS_LOAD_STRATEGY=prefetch
 LLM_SAFETENSORS_PREFETCH_NUM_THREADS=4
 LLM_ENFORCE_EAGER=false
+LLM_FAST_MODEL_CACHE_ENABLED=true
+LLM_FAST_MODEL_CACHE_PATH=/dev/shm/cell_rag_models/Qwen3-32B
 ```
 
-Override those environment variables before startup if prefetch needs to be
-disabled or tuned. To compare normal CUDA graph warmup against eager execution,
-run:
-
-```bash
-scripts/benchmark_llm_startup.sh
-```
-
-`LLM_ENFORCE_EAGER=true` passes `--enforce-eager` to vLLM. It can reduce CUDA
-graph startup work, but may slow steady generation.
-
-To inspect whether model files are on fast local storage:
+Inspect storage speed:
 
 ```bash
 scripts/inspect_model_storage.sh
 ```
 
-If CCI provides a faster scratch/NVMe path with enough free space, prepare a
-runtime copy with:
+Prepare a fast runtime copy:
 
 ```bash
-scripts/prepare_fast_model_cache.sh /path/to/fast-scratch/Qwen3-32B
+scripts/prepare_fast_model_cache.sh /dev/shm/cell_rag_models/Qwen3-32B
 ```
 
-Then set `LLM_MODEL_PATH=/path/to/fast-scratch/Qwen3-32B` before starting vLLM.
-For an automatic per-runtime cache, configure:
+Configure the automatic fast cache:
 
 ```bash
 scripts/configure_fast_model_cache.sh /dev/shm/cell_rag_models/Qwen3-32B
 ```
 
-With `LLM_FAST_MODEL_CACHE_ENABLED=true`, `scripts/start_llm_server.sh` prepares
-the cache if missing and starts vLLM from `LLM_FAST_MODEL_CACHE_PATH`.
-
-The API is served by `src/rag_search_server.py`.
-The mentor-facing wrapper is served by `src/mentor_api_server.py`.
-
-## API
-
-### `GET /health`
-
-`/health` is a readiness check for the loaded RAG server. It returns:
-
-- `status`: `"ok"` if the FastAPI app initialized successfully.
-- `chunks_path`: the chunk JSONL file the server loaded.
-- `embeddings_path`: the embedding matrix file the server loaded.
-- `vector_backend_requested`: configured backend, usually `exact` or `faiss`.
-- `vector_backend`: backend actually loaded.
-- `faiss_index_path`: configured FAISS index path.
-- `faiss_candidates`: number of FAISS candidates requested before hybrid reranking.
-- `faiss_nprobe`: IVF probe count when FAISS is active.
-- `reranker_enabled`: whether the neural reranker is configured.
-- `reranker_loaded`: whether the reranker model loaded successfully.
-- `reranker_model_path`: configured reranker model path.
-- `reranker_candidates`: number of pre-ranked candidates reranked by the cross-encoder.
-- `reranker_weight`: score weight added after neural reranking.
-- `reranker_exact_match_weight`: score weight used for exact alias/name/ID matches.
-- `reranker_max_length`: maximum query-passage token length for reranking.
-- `chunks`: number of loaded retrievable chunks.
-- `embedding_shape`: matrix shape, expected to match chunk count and embedding dimension.
-- `cuda_available`: whether PyTorch can see CUDA.
-- `gpu`: the GPU name used by the embedding model.
-
-Use it after startup to confirm the server loaded the intended corpus and embedding artifact.
-
-Example:
+Benchmark startup settings:
 
 ```bash
-curl http://127.0.0.1:8010/health
+scripts/benchmark_llm_startup.sh
 ```
 
-### `POST /search`
+## Rebuilding The Corpus
 
-Runs retrieval only. It combines exact alias matching, BM25-style lexical scoring, Qwen3 vector similarity, lightweight lexical reranking, optional neural reranking, and source-aware ranking. The vector scorer can run as exact in-process NumPy search or as a FAISS ANN candidate search.
-
-Example:
-
-```bash
-curl -s http://127.0.0.1:8010/search \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"What is a T cell?","top_k":5}'
-```
-
-The response includes `retrieval_quality`, which estimates whether the top result is strong enough to answer from.
-
-## Vector Backend
-
-The default vector backend is exact NumPy search:
-
-```bash
-RAG_VECTOR_BACKEND=exact scripts/start_rag_server.sh
-```
-
-Build the optional FAISS IVF-Flat index from the existing embedding matrix:
-
-```bash
-scripts/build_faiss_index.sh \
-  --embeddings embeddings/rag_qwen3_embedding_8b.npz \
-  --metadata embeddings/rag_qwen3_embedding_8b.metadata.json \
-  --output embeddings/rag_qwen3_embedding_8b.ivfflat.faiss
-```
-
-Start the RAG API with FAISS candidate retrieval:
-
-```bash
-RAG_VECTOR_BACKEND=faiss \
-RAG_FAISS_INDEX_PATH=embeddings/rag_qwen3_embedding_8b.ivfflat.faiss \
-RAG_FAISS_CANDIDATES=4096 \
-RAG_FAISS_NPROBE=64 \
-scripts/start_rag_server.sh
-```
-
-FAISS narrows the vector search to a candidate set before the existing BM25, alias, rerank, and source-aware scoring logic chooses final results. Exact search remains the reference fallback.
-
-## Neural Reranker
-
-The neural reranker is an optional cross-encoder pass after initial hybrid retrieval. It scores query-passage pairs directly, then adds a normalized reranker score to the existing ranking.
-
-Download the default reranker:
-
-```bash
-scripts/download_reranker_model.sh cross-encoder/ms-marco-MiniLM-L-6-v2 models/ms-marco-MiniLM-L-6-v2
-```
-
-Enable it in `.env` or for one server start:
-
-```bash
-RAG_RERANKER_ENABLED=true \
-RAG_RERANKER_MODEL_PATH=models/ms-marco-MiniLM-L-6-v2 \
-RAG_RERANKER_CANDIDATES=48 \
-RAG_RERANKER_WEIGHT=0.35 \
-RAG_RERANKER_EXACT_MATCH_WEIGHT=0.0 \
-RAG_RERANKER_MAX_LENGTH=512 \
-RAG_RERANKER_BATCH_SIZE=8 \
-scripts/start_rag_server.sh
-```
-
-The exact-match weight defaults to `0.0` because curated aliases, IDs, and
-names are more reliable than a general reranker for short biomedical symbols.
-
-Per request, `use_neural_reranker` can disable or request reranking:
-
-```bash
-curl -s http://127.0.0.1:8010/search \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"What markers identify Tregs?","top_k":5,"use_neural_reranker":true}'
-```
-
-Use `false` to compare against the same server without the neural reranker.
-
-### `POST /answer`
-
-Runs retrieval, builds a cited context prompt, and calls the configured OpenAI-compatible chat endpoint.
-
-By default the endpoint abstains when retrieval confidence is low. Set `allow_low_confidence` to `true` only for debugging.
-
-The response includes `citation_check`, a machine-readable audit of the final answer. It reports the retrieved source block IDs, citations used by the answer, invalid citations, uncited factual-looking claim units, and whether the final answer passed the citation hygiene check. The server also records whether deterministic grounding changed the raw model output.
-
-Example:
-
-```bash
-curl -s http://127.0.0.1:8010/answer \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"What is a regulatory T cell?","top_k":5}'
-```
-
-## Mentor API
-
-The mentor API is a cleaner demonstration layer over the internal RAG API. It runs on the CCI server at:
-
-```text
-http://127.0.0.1:8020
-```
-
-It stays bound to localhost by default. For a mentor demo from Windows, open an SSH tunnel with:
-
-```powershell
-$env:CELL_RAG_SSH_HOST="<CCI_H100_HOSTNAME_OR_IP>"
-$env:CELL_RAG_SSH_KEY="$HOME\.ssh\public_key"
-powershell -ExecutionPolicy Bypass -File scripts\mentor_rag_api_tunnel.ps1
-```
-
-Then open the interactive API docs:
-
-```text
-http://127.0.0.1:8020/docs
-```
-
-To test the tunnel once and automatically close it:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\mentor_rag_api_tunnel.ps1 -OneShot
-```
-
-Endpoints:
-
-- `GET /health`: checks the mentor API and internal RAG service.
-- `GET /examples`: returns demo questions.
-- `POST /ask`: returns a cited answer, retrieval quality, citation audit, and compact sources.
-- `POST /search`: returns retrieval-only results for debugging.
-
-The remote lifecycle commands are:
-
-```bash
-scripts/start_mentor_api.sh
-scripts/status_mentor_api.sh
-scripts/smoke_mentor_api.sh
-scripts/stop_mentor_api.sh
-```
-
-If the API must be exposed beyond an SSH tunnel, set `MENTOR_API_KEY` and bind
-`MENTOR_API_HOST=0.0.0.0` only after the CCI network/firewall rules are known.
-
-## Hosted Demo Backend
-
-The hosted demo backend keeps the model and RAG artifacts on CCI while letting a
-mentor call a public API URL. Because the current CCI public mapping exposes SSH
-but not port `8020`, the hosted demo uses an outbound Cloudflare quick tunnel.
-
-Start or repair the hosted demo backend on CCI:
-
-```bash
-scripts/ensure_hosted_demo.sh
-```
-
-Show the public URL:
-
-```bash
-scripts/status_public_demo_tunnel.sh
-```
-
-The mentor API key is stored on CCI in:
-
-```text
-secrets/mentor_api_key.txt
-```
-
-Mentor requests to `/ask` and `/search` must include:
-
-```text
-Authorization: Bearer <mentor-api-key>
-```
-
-Client examples are in:
-
-- `examples/python_client.py`
-- `examples/smoke_hosted_demo.py`
-- `examples/windows_client.ps1`
-- `examples/curl_examples.md`
-
-External public smoke test:
-
-```bash
-export CELL_RAG_DEMO_URL="https://your-public-demo-url"
-export CELL_RAG_DEMO_API_KEY="your-mentor-api-key"
-python examples/smoke_hosted_demo.py
-```
-
-Windows client example:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
-  -BaseUrl "https://your-public-demo-url" `
-  -ApiKey "your-mentor-api-key" `
-  -Question "What markers identify regulatory T cells?"
-```
-
-For full hosted-demo notes, see `docs/HOSTED_DEMO.md`.
-
-## Evaluate
-
-The current evals are smoke tests, not a full benchmark.
-
-Run retrieval eval:
-
-```bash
-scripts/run_retrieval_eval.sh
-```
-
-When the server has the neural reranker loaded, compare reranked and non-reranked retrieval without restarting:
-
-```bash
-scripts/run_retrieval_eval.sh --use-neural-reranker true
-scripts/run_retrieval_eval.sh --use-neural-reranker false
-```
-
-This reads `eval/queries.jsonl`. Each line has:
-
-- `query`: text sent to `/search`.
-- `expected_doc_ids`: acceptable returned document IDs.
-- `top_k`: requested number of results.
-
-The runner reports:
-
-- `hit_at_1`: expected doc is the top result.
-- `hit_at_k`: expected doc appears anywhere in the returned top K.
-- `mrr`: reciprocal-rank score, where rank 1 is `1.0`, rank 2 is `0.5`, and missing is `0.0`.
-- `failures`: cases where the expected source was not retrieved.
-- `low_confidence`: cases where retrieval returned a low-confidence assessment.
-
-Run answer eval:
-
-```bash
-scripts/run_answer_eval.sh
-```
-
-The answer eval accepts the same reranker flag:
-
-```bash
-scripts/run_answer_eval.sh --use-neural-reranker true
-scripts/run_answer_eval.sh --use-neural-reranker false
-```
-
-This reads `eval/answer_cases.jsonl`. Each line has:
-
-- `name`: stable case name.
-- `query`: text sent to `/answer`.
-- `expected_doc_ids`: source IDs that should appear in returned sources.
-- `must_contain`: strings that must appear in the generated answer.
-- `must_not_contain`: strings that must not appear, such as `<think>`.
-- `should_abstain`: whether the answer should refuse because retrieval is insufficient.
-- `top_k`: requested number of retrieval results.
-
-The answer eval checks both source grounding and answer text. It also requires the API-provided `citation_check` field to exist and pass. It is useful for catching regressions such as missing citations, retrieval failures, unwanted reasoning tags, invalid source IDs, and failed abstention behavior.
-
-Run the full smoke-test sequence:
-
-```bash
-scripts/smoke_all.sh
-```
-
-Create a timestamped audit report for handoff or reproducibility:
-
-```bash
-scripts/audit_all.sh
-```
-
-The audit writes logs under `reports/audits/<timestamp>/`. It captures startup,
-server status, GPU/model status, source registry validation, source counts,
-retrieval evals, answer evals, and final service status. See `docs/AUDIT.md`
-for details.
-
-Create a curated demo pack with representative questions and cited answers:
-
-```bash
-scripts/run_demo_pack.sh
-```
-
-The demo writes outputs under `reports/demos/<timestamp>/`, including
-`summary.txt`, `answers.jsonl`, and `answers.md`. See
-`docs/PROJECT_SUMMARY.md` for the final project explanation and demo scope.
-
-## Rebuild
-
-Rebuild the Cell Ontology-only corpus:
-
-```bash
-scripts/rebuild_cell_rag.sh
-```
-
-To rebuild from a local OBO file:
-
-```bash
-CL_OBO_PATH=/path/to/cl.obo scripts/rebuild_cell_rag.sh
-```
-
-Build the current combined runtime corpus:
+Rebuild the combined maintained corpus:
 
 ```bash
 scripts/build_combined_rag_with_cellxgene.sh
 ```
 
-That combined script currently merges Cell Ontology, Uberon, GO, PATO,
-CELLxGENE Census summaries, HGNC, NCBI Gene Human, UniProtKB reviewed human,
-CellMarker 3.0, and PanglaoDB.
+This merges the active source chunk files, combines aliases, and rebuilds the
+Qwen3 embedding matrix.
 
-After rebuilding embeddings, rebuild the FAISS index if `RAG_VECTOR_BACKEND=faiss` will be used:
+Rebuild the optional FAISS index after embeddings change:
 
 ```bash
 scripts/build_faiss_index.sh
 ```
 
-The reranker model does not need rebuilding when corpus embeddings change. It only needs to exist locally if `RAG_RERANKER_ENABLED=true`.
+Rebuild only the Cell Ontology-focused debug corpus:
 
-For source details and rebuild order, see:
-
-- `docs/CORPUS.md`
-- `docs/RAG_WORKFLOW.md`
-
-## Expand The Corpus
-
-Create a JSONL file where each row has:
-
-```json
-{"doc_id":"paper:1","title":"Example","text":"Document text...","aliases":["optional alias"],"metadata":{"source":"optional"}}
+```bash
+scripts/rebuild_cell_rag.sh
 ```
 
-Then run:
+Use a specific local OBO file:
+
+```bash
+CL_OBO_PATH=/path/to/cl.obo scripts/rebuild_cell_rag.sh
+```
+
+## Adding Your Own Documents
+
+Create JSONL records with this shape:
+
+```json
+{"doc_id":"doc:1","title":"Example","text":"Document text...","aliases":["optional alias"],"metadata":{"source":"optional"}}
+```
+
+Build and embed the added corpus:
 
 ```bash
 EXTRA_CORPUS_NAME=my_docs scripts/build_extra_jsonl_corpus.sh /path/to/docs.jsonl
 ```
 
-Start the server with the expanded paths printed by that script, or update `.env` to point at the new combined artifacts.
+Then start the server with the expanded paths printed by the script, or update
+`.env` to point at the new combined artifacts.
+
+## Evaluation
+
+Run retrieval eval:
+
+```bash
+scripts/run_retrieval_eval.sh
+scripts/run_retrieval_eval.sh --cases eval/cellxgene_queries.jsonl
+```
+
+Run answer eval:
+
+```bash
+scripts/run_answer_eval.sh
+scripts/run_answer_eval.sh --cases eval/cellxgene_answer_cases.jsonl
+```
+
+Run the full smoke suite:
+
+```bash
+scripts/smoke_all.sh
+```
+
+Run a saved audit:
+
+```bash
+scripts/audit_all.sh
+```
+
+Current smoke coverage:
+
+- main retrieval cases: `33`
+- CELLxGENE retrieval cases: `5`
+- main answer cases: `21`
+- CELLxGENE answer cases: `2`
+
+## Known Limits
+
+- Evaluation is smoke-level, not a full scientific benchmark.
+- CELLxGENE is summarized from `obs` metadata only. It does not include dataset
+  titles, publication links, donor-level metadata, expression matrices,
+  marker-expression evidence, or differential expression.
+- Literature sources are not included yet.
+- FAISS is available, but BM25 still scans chunks in process. Larger literature
+  ingestion should add a persistent lexical index and may need a managed vector
+  database or distributed FAISS.
+- The reranker is a general MiniLM cross-encoder, not a single-cell-specific
+  reranker.
+
+## Repository Safety Checklist
+
+Before pushing changes, confirm large runtime directories are not present:
+
+```bash
+find . -maxdepth 2 -type d | grep -E 'models|sources|raw|processed|chunks|embeddings|secrets|logs|reports'
+```
+
+Expected result: no runtime artifact directories from the list above.

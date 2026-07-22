@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Stops the full local RAG stack in reverse dependency order.
-# 1) Public demo tunnel first, so no public requests reach the mentor API.
-# 2) Mentor API second, so no demonstration requests reach the RAG server.
+# 1) Public demo tunnel first, so no public requests reach the public API.
+# 2) Public API second, so no external requests reach the RAG server.
 # 3) RAG server third, so no new answer requests reach the LLM.
 # 4) LLM server fourth, freeing the large Qwen3-32B GPU allocation.
 
@@ -17,8 +17,8 @@ else
 fi
 
 echo
-echo "Stopping Mentor API server..."
-"$ROOT/scripts/stop_mentor_api.sh" || MENTOR_API_STOP_FAILED=1
+echo "Stopping public API server..."
+"$ROOT/scripts/stop_public_api.sh" || PUBLIC_API_STOP_FAILED=1
 
 echo
 echo "Stopping RAG server..."
@@ -29,7 +29,7 @@ echo "Stopping local LLM server..."
 "$ROOT/scripts/stop_llm_server.sh" || LLM_STOP_FAILED=1
 
 echo
-if [[ "${PUBLIC_DEMO_TUNNEL_STOP_FAILED:-0}" == "1" || "${MENTOR_API_STOP_FAILED:-0}" == "1" || "${RAG_STOP_FAILED:-0}" == "1" || "${LLM_STOP_FAILED:-0}" == "1" ]]; then
+if [[ "${PUBLIC_DEMO_TUNNEL_STOP_FAILED:-0}" == "1" || "${PUBLIC_API_STOP_FAILED:-0}" == "1" || "${RAG_STOP_FAILED:-0}" == "1" || "${LLM_STOP_FAILED:-0}" == "1" ]]; then
   echo "One or more services did not stop cleanly. Current status:"
   "$ROOT/scripts/status_all.sh" || true
   exit 1
