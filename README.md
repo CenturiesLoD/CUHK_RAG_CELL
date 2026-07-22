@@ -79,10 +79,25 @@ Active source families:
 Use this path if the CCI backend is already running. You only need Python and the
 public API URL/key.
 
+Current hosted endpoint:
+
+```text
+https://dual-retrieval-specifically-fusion.trycloudflare.com
+```
+
+This is a Cloudflare quick-tunnel URL. It is live at the time of this README
+update, but it can change if the tunnel process is restarted. The current URL can
+always be checked on CCI with:
+
+```bash
+cd /data/L202500484/cell_rag
+scripts/status_public_demo_tunnel.sh
+```
+
 Linux/macOS:
 
 ```bash
-export CELL_RAG_DEMO_URL="https://your-public-api-url"
+export CELL_RAG_DEMO_URL="https://dual-retrieval-specifically-fusion.trycloudflare.com"
 export CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples/smoke_hosted_demo.py
 ```
@@ -90,7 +105,7 @@ python examples/smoke_hosted_demo.py
 Windows PowerShell:
 
 ```powershell
-$env:CELL_RAG_DEMO_URL="https://your-public-api-url"
+$env:CELL_RAG_DEMO_URL="https://dual-retrieval-specifically-fusion.trycloudflare.com"
 $env:CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples\smoke_hosted_demo.py
 ```
