@@ -12,6 +12,7 @@ class RepositoryLayoutTests(unittest.TestCase):
     def test_required_public_files_exist(self) -> None:
         required = [
             "README.md",
+            "CODEX_INSTRUCTIONS.txt",
             ".env.example",
             "docs/current_endpoint.json",
             "examples/python_client.py",

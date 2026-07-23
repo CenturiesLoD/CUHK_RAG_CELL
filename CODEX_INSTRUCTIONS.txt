@@ -1,0 +1,160 @@
+Codex operating notes for CUHK_RAG_CELL
+
+Purpose
+-------
+This file records repo-specific quirks for future Codex sessions. It is not
+general user documentation. Use README.md for normal user setup and
+docs/HOSTED_DEMO.md for the hosted API workflow.
+
+Primary paths and hosts
+-----------------------
+Local lightweight repo:
+  C:\Users\JXZ\Documents\Codex\rag_remote_patch
+
+CCI runtime:
+  /data/L202500484/cell_rag
+
+Primary CCI SSH target:
+  root@118.145.32.133 -p 20484
+
+Windows SSH key usually used by this workspace:
+  C:\Users\JXZ\.ssh\public_key
+
+Use the repo scripts instead of rebuilding ad hoc shell commands when possible.
+The CCI runtime contains large data and model artifacts that are intentionally
+not present in GitHub.
+
+Important runtime directories that must not be committed
+-------------------------------------------------------
+Never add these directories or their generated contents to Git:
+  models/
+  sources/
+  raw/
+  processed/
+  chunks/
+  embeddings/
+  secrets/
+  logs/
+  reports/
+  tools/
+  .endpoint_repo/
+
+The public API key lives on CCI at:
+  /data/L202500484/cell_rag/secrets/public_api_key.txt
+
+Do not print secrets unless the user explicitly asks for a private handoff.
+If a GitHub personal access token is pasted into chat, treat it as compromised
+and tell the user to revoke it.
+
+Hosted endpoint publishing
+--------------------------
+Cloudflare quick-tunnel URLs are temporary. The repo uses a stable GitHub
+manifest so client scripts can discover the current URL:
+  docs/current_endpoint.json
+
+Raw manifest URL:
+  https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+
+The CCI runtime folder is not a Git checkout. Automatic publishing uses this
+separate lightweight checkout:
+  /data/L202500484/cell_rag/.endpoint_repo
+
+The publisher should push through GitHub SSH over port 443:
+  ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_CELL.git
+
+Do not switch it back to git@github.com:CenturiesLoD/CUHK_RAG_CELL.git unless
+CCI outbound SSH port 22 has been confirmed. Port 22 timed out from CCI.
+
+The deploy key private half is stored on CCI:
+  /data/L202500484/cell_rag/secrets/github_deploy_key
+
+GitHub must contain the matching public deploy key with write access under:
+  CenturiesLoD/CUHK_RAG_CELL -> Settings -> Deploy keys
+
+The deploy key can write to the whole repo. The script limits behavior by only
+copying, adding, committing, and pushing docs/current_endpoint.json. This is a
+script-level guard, not a GitHub file-level permission.
+
+Normal endpoint refresh commands
+--------------------------------
+If the backend is already running and only the manifest needs updating:
+  cd /data/L202500484/cell_rag
+  PUBLISH_ENDPOINT_PUSH=1 scripts/publish_public_endpoint.sh
+
+If the backend may need repair, but the same tunnel can be reused:
+  cd /data/L202500484/cell_rag
+  scripts/init_public_demo.sh --publish-endpoint
+
+If a fresh Cloudflare URL is needed:
+  cd /data/L202500484/cell_rag
+  scripts/init_public_demo.sh --restart-tunnel --publish-endpoint
+
+Avoid restarting the LLM unless necessary. A cold Qwen3-32B vLLM startup can
+take about 10 to 13 minutes because it loads roughly 61 GB of weights, allocates
+GPU memory, and warms CUDA graphs.
+
+Testing strategy
+----------------
+Use quick checks when only the endpoint manifest changed:
+  scripts/status_public_demo_tunnel.sh
+  scripts/status_public_api.sh
+  scripts/status_rag_server.sh
+  scripts/status_llm_server.sh
+
+Use hosted smoke tests for final handoff or after API changes:
+  python examples/smoke_hosted_demo.py
+
+Authenticated hosted smoke tests call the real RAG and Qwen3-32B model. Expect
+about 40 to 90 seconds when the model is already loaded.
+
+Repo-only checks should stay dependency-free:
+  python -m compileall -q src examples tests
+  python -m unittest discover -s tests
+
+Git and Codex desktop quirks
+----------------------------
+The Codex desktop environment used here has a bundled Git that can commit but
+failed to push HTTPS because git-remote-https was missing. Use one of these
+instead:
+  1. A normal Git install with GitHub credentials.
+  2. The CCI .endpoint_repo checkout with the deploy key.
+
+Codex desktop does not expose a durable background SSH terminal in the same way
+as some CLI sessions. Prefer fewer SSH round trips and combine related remote
+checks in one remote script or one quoted remote command when practical.
+
+When syncing repo changes to CCI, preserve paths carefully. A flat SCP into the
+runtime root can put files in the wrong location. Verify scripts still live
+under scripts/ and docs still live under docs/.
+
+Current expected healthy CCI state
+----------------------------------
+RAG server:
+  http://127.0.0.1:8010/health
+
+Public API wrapper:
+  http://127.0.0.1:8020/health
+
+LLM endpoint:
+  http://127.0.0.1:8000/v1/models
+
+Expected RAG health traits:
+  vector_backend: faiss
+  reranker_loaded: true
+  chunks: 325815
+  model served name: qwen3-32b
+
+Known remaining product limits
+------------------------------
+CELLxGENE is summarized from obs metadata only. It does not include dataset
+titles, publication links, donor-level metadata, expression matrices,
+marker-expression evidence, or differential expression.
+
+Literature sources are not included yet.
+
+FAISS is enabled for vector search, but BM25 still scans chunks in process.
+Large literature-scale ingestion should add a persistent lexical index and may
+eventually need a managed vector database or distributed FAISS.
+
+The reranker is a general MiniLM cross-encoder, not a single-cell-specific
+reranker.
