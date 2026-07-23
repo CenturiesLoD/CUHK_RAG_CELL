@@ -37,3 +37,7 @@ def resolve_base_url(
     if not discovered:
         raise RuntimeError(f"Endpoint manifest did not contain base_url: {manifest}")
     return discovered.rstrip("/")
+
+
+if __name__ == "__main__":
+    print(resolve_base_url())

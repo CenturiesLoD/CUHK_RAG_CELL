@@ -1,13 +1,14 @@
 # Hosted Cell RAG API Examples
 
-Set these values first:
+Resolve the current quick-tunnel URL from the stable GitHub manifest, then set
+the API key supplied separately by the server operator:
 
 ```bash
-export CELL_RAG_DEMO_URL="https://bags-vary-bridge-madrid.trycloudflare.com"
+export CELL_RAG_DEMO_URL="$(python examples/endpoint_discovery.py)"
 export CELL_RAG_DEMO_API_KEY="your-api-key"
 ```
 
-If the quick-tunnel URL changes, check the stable endpoint manifest:
+To inspect the manifest directly:
 
 ```bash
 curl -s https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json

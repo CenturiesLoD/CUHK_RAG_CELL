@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -32,6 +33,17 @@ class RepositoryLayoutTests(unittest.TestCase):
         base_url = manifest["base_url"].rstrip("/")
         self.assertTrue(base_url.startswith("https://"))
         self.assertEqual(manifest["status_url"], f"{base_url}/health")
+
+    def test_quickstart_clones_repo_without_hardcoding_tunnel(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        curl_examples = (ROOT / "examples/curl_examples.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "git clone https://github.com/CenturiesLoD/CUHK_RAG_CELL.git",
+            readme,
+        )
+        quick_tunnel_url = re.compile(r"https://[A-Za-z0-9-]+\.trycloudflare\.com")
+        self.assertIsNone(quick_tunnel_url.search(readme))
+        self.assertIsNone(quick_tunnel_url.search(curl_examples))
 
     def test_heavy_runtime_directories_are_absent(self) -> None:
         excluded = ["models", "sources", "raw", "processed", "chunks", "embeddings", "secrets"]

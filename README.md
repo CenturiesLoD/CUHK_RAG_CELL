@@ -77,17 +77,19 @@ Active source families:
 ## Quickstart: Hosted API
 
 Use this path if the CCI backend is already running. You only need Python and the
-public API key.
+public API key. The key is intentionally not stored in GitHub; obtain it
+separately from the server operator.
 
-Current hosted endpoint:
+Clone the lightweight client repository:
 
-```text
-https://bags-vary-bridge-madrid.trycloudflare.com
+```bash
+git clone https://github.com/CenturiesLoD/CUHK_RAG_CELL.git
+cd CUHK_RAG_CELL
 ```
 
-This is a Cloudflare quick-tunnel URL, so it can change if the tunnel process is
-restarted. To avoid making users edit URLs manually, the example clients
-auto-discover the current endpoint from this stable GitHub manifest:
+The backend uses a Cloudflare quick-tunnel URL, which can change if the tunnel
+process is restarted. The example clients therefore auto-discover the active URL
+from this stable GitHub manifest:
 
 ```text
 https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
