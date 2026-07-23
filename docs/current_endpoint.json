@@ -1,7 +1,7 @@
 {
   "base_url": "https://bags-vary-bridge-madrid.trycloudflare.com",
   "status_url": "https://bags-vary-bridge-madrid.trycloudflare.com/health",
-  "updated_at_utc": "2026-07-23T08:45:06Z",
+  "updated_at_utc": "2026-07-23T09:06:05Z",
   "backend": "CCI Cloudflare quick tunnel",
   "note": "This URL is discovered through this stable GitHub manifest. If the quick tunnel restarts, update this file with the new URL."
 }
