@@ -3,7 +3,7 @@
 Set these values first:
 
 ```bash
-export CELL_RAG_DEMO_URL="https://instructions-medicine-enabling-sent.trycloudflare.com"
+export CELL_RAG_DEMO_URL="https://bags-vary-bridge-madrid.trycloudflare.com"
 export CELL_RAG_DEMO_API_KEY="your-api-key"
 ```
 

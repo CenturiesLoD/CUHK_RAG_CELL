@@ -18,6 +18,8 @@ class RepositoryLayoutTests(unittest.TestCase):
             "examples/smoke_hosted_demo.py",
             "scripts/init_public_demo.sh",
             "scripts/init_public_demo_from_windows.ps1",
+            "scripts/publish_public_endpoint.sh",
+            "scripts/setup_public_endpoint_publisher.sh",
             "scripts/start_detached_audit.sh",
             "scripts/status_detached_audit.sh",
         ]

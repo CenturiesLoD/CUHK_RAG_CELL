@@ -72,6 +72,7 @@ coverage/
 
 # Local cache directories
 .cache/
+.endpoint_repo/
 huggingface/
 hf_cache/
 

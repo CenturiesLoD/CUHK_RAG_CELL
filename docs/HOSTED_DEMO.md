@@ -108,11 +108,61 @@ manifest on CCI:
 scripts/init_public_demo.sh --publish-endpoint
 ```
 
-Set `PUBLISH_ENDPOINT_PUSH=1` if the CCI checkout has GitHub push credentials and
-you want the script to push the manifest update:
+## Automatic Manifest Publishing
+
+The CCI runtime directory is not a Git checkout. The automatic publisher uses a
+small checkout dedicated to GitHub updates:
+
+```text
+/data/L202500484/cell_rag/.endpoint_repo
+```
+
+The publisher uses GitHub SSH over port `443` by default:
+
+```text
+ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_CELL.git
+```
+
+This avoids CCI networks that block outbound SSH on port `22`.
+
+The flow is:
+
+```text
+Cloudflare tunnel writes logs/public_demo_tunnel.<host>.url
+  -> scripts/write_public_endpoint_manifest.sh writes docs/current_endpoint.json
+  -> scripts/publish_public_endpoint.sh clones or updates .endpoint_repo
+  -> the manifest is copied into .endpoint_repo/docs/current_endpoint.json
+  -> Git commits and pushes only that manifest change
+```
+
+Configure a deploy key once:
+
+```bash
+scripts/setup_public_endpoint_publisher.sh
+```
+
+Add the printed public key in GitHub:
+
+```text
+CenturiesLoD/CUHK_RAG_CELL -> Settings -> Deploy keys -> Add deploy key
+```
+
+Enable:
+
+```text
+Allow write access
+```
+
+Then test the publish path:
 
 ```bash
 PUBLISH_ENDPOINT_PUSH=1 scripts/publish_public_endpoint.sh
+```
+
+After that, restarting the hosted demo can update GitHub automatically:
+
+```bash
+scripts/init_public_demo.sh --restart-tunnel --publish-endpoint
 ```
 
 A true stable API hostname requires one of these infrastructure options:

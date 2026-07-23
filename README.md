@@ -82,7 +82,7 @@ public API key.
 Current hosted endpoint:
 
 ```text
-https://instructions-medicine-enabling-sent.trycloudflare.com
+https://bags-vary-bridge-madrid.trycloudflare.com
 ```
 
 This is a Cloudflare quick-tunnel URL, so it can change if the tunnel process is
@@ -179,9 +179,21 @@ Update and push the GitHub endpoint manifest after generating a URL:
 scripts/init_public_demo.sh --publish-endpoint
 ```
 
-If the CCI checkout does not have GitHub push credentials, run the init command,
-copy the printed URL into `docs/current_endpoint.json`, then commit and push from
-a machine that has GitHub access.
+For automatic publishing from CCI, configure a write-enabled GitHub deploy key
+once:
+
+```bash
+scripts/setup_public_endpoint_publisher.sh
+```
+
+Add the printed public key to the GitHub repo as a deploy key with write access.
+After that, `scripts/init_public_demo.sh --publish-endpoint` can update
+`docs/current_endpoint.json`, commit it in the lightweight endpoint checkout, and
+push it to `main`.
+
+The publisher uses a separate checkout at `.endpoint_repo/` by default. It does
+not turn the CCI runtime directory into a Git repo, so runtime artifacts such as
+models, corpus files, embeddings, logs, and secrets remain outside Git.
 
 This does not make Cloudflare quick tunnels permanent. It makes URL rotation
 operational: the server operator refreshes the URL, the repo stores the current
