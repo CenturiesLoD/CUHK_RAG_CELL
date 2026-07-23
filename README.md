@@ -76,8 +76,8 @@ Active source families:
 
 ## Quickstart: Hosted API
 
-Use this path if the CCI backend is already running. You only need Python and the
-public API key. The key is intentionally not stored in GitHub; obtain it
+Use this path if the CCI backend is already running. You need Git, Python 3.12+,
+and the public API key. The key is intentionally not stored in GitHub; obtain it
 separately from the server operator.
 
 Clone the lightweight client repository:
