@@ -64,7 +64,42 @@ wrapper, and Cloudflare tunnel. It also publishes the current public endpoint to
 https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
 ```
 
-### 4. Smoke Test The Hosted API
+### 4. Running From A Different CCI Image
+
+The startup command works from another CCI image only if the shared runtime
+directory is mounted and visible in that image.
+
+Check the required runtime paths first:
+
+```bash
+ls -lah /data/L202500484/cell_rag
+ls -lah /data/L202500484/cell_rag/models/Qwen3-32B
+ls -lah /data/L202500484/cell_rag/embeddings/rag_qwen3_embedding_8b.npz
+```
+
+If those paths exist, run:
+
+```bash
+cd /data/L202500484/cell_rag
+scripts/init_public_demo.sh --publish-endpoint
+```
+
+Fresh CCI images may not include Git. If endpoint publishing fails with
+`Required command is missing: git`, install Git and rerun:
+
+```bash
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y git
+cd /data/L202500484/cell_rag
+scripts/init_public_demo.sh --publish-endpoint
+```
+
+If the `/data/L202500484/cell_rag` path is missing, the GitHub repo alone is not
+enough to run the backend. The model weights, corpus chunks, embeddings, FAISS
+index, source registry, secrets, and Python environments live in that shared CCI
+runtime directory.
+
+### 5. Smoke Test The Hosted API
 
 The smoke test uses only the Python standard library. If you are only querying
 the already-hosted API from your laptop, you do not need to install
@@ -84,7 +119,7 @@ Expected result:
 - `/search` returns retrieved source records.
 - `citation_check.passed` is `true`.
 
-### 5. Ask A Question
+### 6. Ask A Question
 
 Linux/macOS:
 

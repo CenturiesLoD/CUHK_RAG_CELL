@@ -13,6 +13,18 @@ GIT_USER_EMAIL="${PUBLIC_ENDPOINT_GIT_USER_EMAIL:-cell-rag-cci@users.noreply.git
 require_command() {
     if ! command -v "$1" >/dev/null 2>&1; then
         echo "Required command is missing: $1" >&2
+        if [[ "$1" == "git" ]]; then
+            cat >&2 <<'EOF'
+
+Fresh CCI images may not include Git. Install it, then rerun:
+
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y git
+  cd /data/L202500484/cell_rag
+  scripts/init_public_demo.sh --publish-endpoint
+
+EOF
+        fi
         exit 1
     fi
 }
