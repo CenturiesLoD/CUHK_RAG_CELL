@@ -66,8 +66,10 @@ https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_e
 
 ### 4. Smoke Test The Hosted API
 
-The smoke test uses only the Python standard library. Do not install
-`requirements.txt` just to query the hosted model.
+The smoke test uses only the Python standard library. If you are only querying
+the already-hosted API from your laptop, you do not need to install
+`requirements.txt`. If you are running or rebuilding the backend on CCI, install
+the server dependencies from `requirements.txt` in the runtime environment.
 
 ```bash
 python examples/smoke_hosted_demo.py
@@ -208,9 +210,9 @@ $env:CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples\smoke_hosted_demo.py
 ```
 
-The hosted client and smoke test use only the Python standard library. Do not
-install `requirements.txt` just to query the hosted API; that file is for a CCI
-server runtime.
+The hosted client and smoke test use only the Python standard library. Install
+`requirements.txt` when you are setting up or repairing a CCI backend runtime,
+not when you are only calling the hosted API as a client.
 
 Ask one question:
 
