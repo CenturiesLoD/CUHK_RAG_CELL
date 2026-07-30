@@ -7,6 +7,104 @@ source-aware ranking, optional reranking, and a local Qwen3-32B answer model. Th
 large runtime artifacts are hosted on CCI; this repository contains the code,
 documentation, examples, tests, and rebuild scripts.
 
+## Step-By-Step: Run The Hosted Model
+
+Use this first if you want to test the model without downloading model weights,
+source files, embeddings, or vector indexes. The full model runs on the CCI
+server; your local machine only sends API requests.
+
+### 1. Clone The Repository
+
+```bash
+git clone https://github.com/CenturiesLoD/CUHK_RAG_CELL.git
+cd CUHK_RAG_CELL
+```
+
+If `git clone` is unavailable, download the GitHub ZIP archive for `main` and
+open a terminal in the extracted folder.
+
+### 2. Set The API Key
+
+Linux/macOS:
+
+```bash
+export CELL_RAG_DEMO_API_KEY="your-api-key"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:CELL_RAG_DEMO_API_KEY="your-api-key"
+```
+
+Do not commit real keys. The API key is only needed for `/ask` and `/search`.
+
+### 3. Start Or Repair The CCI Backend
+
+Skip this step if someone has already started the hosted backend.
+
+If you have SSH access to the CCI runtime, start the full hosted stack with one
+remote command:
+
+```bash
+ssh -p 20484 -i /path/to/private_key root@118.145.32.133 \
+  "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+```
+
+Windows PowerShell:
+
+```powershell
+ssh -p 20484 -i C:\path\to\private_key root@118.145.32.133 "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+```
+
+That command starts or repairs the local vLLM model server, RAG API, public API
+wrapper, and Cloudflare tunnel. It also publishes the current public endpoint to:
+
+```text
+https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+```
+
+### 4. Smoke Test The Hosted API
+
+The smoke test uses only the Python standard library. Do not install
+`requirements.txt` just to query the hosted model.
+
+```bash
+python examples/smoke_hosted_demo.py
+```
+
+Expected result:
+
+- `/health` returns `status: ok`.
+- `/examples` returns example questions.
+- unauthenticated `/ask` returns `401`.
+- authenticated `/ask` returns a cited answer.
+- `/search` returns retrieved source records.
+- `citation_check.passed` is `true`.
+
+### 5. Ask A Question
+
+Linux/macOS:
+
+```bash
+python examples/python_client.py \
+  --api-key "$CELL_RAG_DEMO_API_KEY" \
+  --question "What markers identify regulatory T cells?"
+```
+
+Windows PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
+  -ApiKey $env:CELL_RAG_DEMO_API_KEY `
+  -Question "What is a regulatory T cell?"
+```
+
+The example clients discover the current public URL from
+`docs/current_endpoint.json`. If the Cloudflare quick tunnel restarts, the URL
+may change, but the CCI startup command above republishes the manifest so users
+do not need to edit client code.
+
 ## What This Repo Contains
 
 This is a lightweight repository. It does **not** include model weights or corpus
@@ -76,24 +174,18 @@ Active source families:
 
 ## Quickstart: Hosted API
 
-Use this path if the CCI backend is already running. You need Git, Python 3.12+,
-and the public API key. The key is intentionally not stored in GitHub; obtain it
-separately from the server operator.
+Use this path if the CCI backend is already running. You only need Python and the
+public API key.
 
-Clone the lightweight client repository:
-
-```bash
-git clone https://github.com/CenturiesLoD/CUHK_RAG_CELL.git
-cd CUHK_RAG_CELL
-```
-
-The backend uses a Cloudflare quick-tunnel URL, which can change if the tunnel
-process is restarted. The example clients therefore auto-discover the active URL
-from this stable GitHub manifest:
+The hosted endpoint is discovered from this stable GitHub manifest:
 
 ```text
 https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
 ```
+
+The actual backend URL is a Cloudflare quick-tunnel URL, so it can change when
+the tunnel restarts. Use the manifest or the example clients instead of
+hardcoding the tunnel hostname.
 
 The current URL can also be checked on CCI with:
 
