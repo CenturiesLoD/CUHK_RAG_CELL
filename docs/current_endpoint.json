@@ -1,7 +1,7 @@
 {
-  "base_url": "https://infrastructure-modify-mic-realm.trycloudflare.com",
-  "status_url": "https://infrastructure-modify-mic-realm.trycloudflare.com/health",
-  "updated_at_utc": "2026-08-03T07:05:05Z",
+  "base_url": "https://fits-sail-fate-place.trycloudflare.com",
+  "status_url": "https://fits-sail-fate-place.trycloudflare.com/health",
+  "updated_at_utc": "2026-08-05T06:19:17Z",
   "backend": "CCI Cloudflare quick tunnel",
   "note": "This URL is discovered through this stable GitHub manifest. If the quick tunnel restarts, update this file with the new URL."
 }
