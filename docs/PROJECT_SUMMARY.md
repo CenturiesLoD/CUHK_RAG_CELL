@@ -100,7 +100,7 @@ better final top-K choice among candidates found by aliases, BM25, and vector
 search.
 
 Two retrieval CLIs are kept for different debugging scopes. `src/search_hybrid_qwen.py`
-tests the combined retrieval recipe used by the server. `tools/debug/search_qwen_vectors.py`
+tests the combined retrieval recipe used by the server. `src/search_qwen_vectors.py`
 is a low-level dense-vector diagnostic; it skips aliases, BM25, FAISS, reranking,
 and answer generation so embedding behavior can be isolated.
 

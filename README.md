@@ -176,7 +176,6 @@ Included:
 - `src/`: API servers, corpus builders, retrieval, evaluation, and indexing code.
 - `scripts/`: startup, rebuild, smoke-test, audit, tunnel, and utility scripts.
 - `examples/`: small clients for the hosted API.
-- `tools/debug/`: low-level diagnostic scripts that are not part of normal serving.
 - `eval/`: smoke-test retrieval and answer cases.
 - `demo/`: showcase questions.
 - `docs/`: source, workflow, hosted backend, and audit notes.
@@ -422,12 +421,11 @@ close to the RAG search stack:
 python src/search_hybrid_qwen.py "What markers identify regulatory T cells?"
 ```
 
-The vector-only diagnostic lives under `tools/debug/` because it intentionally
-isolates dense embedding search and skips aliases, BM25, FAISS, reranking, and
-answer generation:
+Use the vector-only diagnostic only when isolating dense embedding search. It
+skips aliases, BM25, FAISS, reranking, and answer generation:
 
 ```bash
-python tools/debug/search_qwen_vectors.py "What is a regulatory T cell?"
+python src/search_qwen_vectors.py "What is a regulatory T cell?"
 ```
 
 ## Running On CCI
@@ -582,7 +580,7 @@ Then start the server with the expanded paths printed by the script, or update
 Run the dependency-free fresh-clone checks on any machine with Python 3.12+:
 
 ```bash
-python -m compileall -q src examples scripts tools tests
+python -m compileall -q src examples scripts tests
 python -m unittest discover -s tests -v
 ```
 

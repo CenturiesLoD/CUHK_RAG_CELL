@@ -26,7 +26,6 @@ raw source file or API
 - `models/`: local embedding, reranker, and LLM model snapshots.
 - `sources/source_registry.json`: server-side provenance and intended-use metadata for every active source.
 - `eval/`: retrieval and answer smoke tests.
-- `tools/debug/`: low-level diagnostic CLIs that are not part of normal serving.
 - `scripts/ensure_cell_rag_stack.ps1`: Windows helper for remote stack startup.
 - `docs/HOSTED_DEMO.md`: hosted public demo backend workflow.
 
@@ -199,7 +198,7 @@ pass, so citation regressions are caught through the normal eval path.
 
 For one-off retrieval debugging, use `src/search_hybrid_qwen.py` to inspect the
 combined alias, lexical, and vector ranking path. Use
-`tools/debug/search_qwen_vectors.py` only when isolating dense-vector behavior;
+`src/search_qwen_vectors.py` only when isolating dense-vector behavior;
 it bypasses aliases, BM25, FAISS, reranking, and answer generation.
 
 The public API wrapper exposes a smaller surface
