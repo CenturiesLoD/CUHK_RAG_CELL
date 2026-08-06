@@ -110,6 +110,30 @@ the server dependencies from `requirements.txt` in the runtime environment.
 python examples/smoke_hosted_demo.py
 ```
 
+If this fails with `Name or service not known`, `getaddrinfo failed`, or another
+host/connection error, the hosted backend may be stopped or the published
+Cloudflare tunnel URL may be stale. Restart and republish it from a machine with
+CCI SSH access:
+
+Linux/macOS:
+
+```bash
+ssh -p 20484 -i /path/to/private_key root@118.145.32.133 \
+  "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+```
+
+Windows PowerShell:
+
+```powershell
+ssh -p 20484 -i C:\path\to\private_key root@118.145.32.133 "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+```
+
+Then rerun:
+
+```bash
+python examples/smoke_hosted_demo.py
+```
+
 Expected result:
 
 - `/health` returns `status: ok`.
@@ -152,6 +176,7 @@ Included:
 - `src/`: API servers, corpus builders, retrieval, evaluation, and indexing code.
 - `scripts/`: startup, rebuild, smoke-test, audit, tunnel, and utility scripts.
 - `examples/`: small clients for the hosted API.
+- `tools/debug/`: low-level diagnostic scripts that are not part of normal serving.
 - `eval/`: smoke-test retrieval and answer cases.
 - `demo/`: showcase questions.
 - `docs/`: source, workflow, hosted backend, and audit notes.
@@ -189,9 +214,8 @@ client
 
 Current corpus:
 
-- `325,815` chunks.
-- `2,712,338` aliases.
-- Qwen3-Embedding-8B embeddings, dimension `4096`.
+- Combined chunks and aliases are generated from the active source families on CCI.
+- Qwen3-Embedding-8B embeddings are stored with metadata alignment files.
 - Optional FAISS IVF-Flat vector index enabled on CCI.
 - Optional MiniLM cross-encoder reranker enabled on CCI.
 - Qwen3-32B answer model served by vLLM.
@@ -285,7 +309,7 @@ From CCI:
 
 ```bash
 cd /data/L202500484/cell_rag
-scripts/init_public_demo.sh
+scripts/init_public_demo.sh --publish-endpoint
 ```
 
 From Windows, using SSH:
@@ -301,7 +325,7 @@ stored elsewhere, pass `-IdentityFile C:\path\to\key`.
 Force a fresh quick-tunnel URL:
 
 ```bash
-scripts/init_public_demo.sh --restart-tunnel
+scripts/init_public_demo.sh --restart-tunnel --publish-endpoint
 ```
 
 Update and push the GitHub endpoint manifest after generating a URL:
@@ -391,6 +415,21 @@ The answer endpoint then builds a cited context prompt and calls the local
 OpenAI-compatible Qwen3-32B endpoint. It abstains when retrieval confidence is
 too low and returns a `citation_check` audit for the final answer.
 
+For server-side retrieval debugging, use the hybrid CLI when you want behavior
+close to the RAG search stack:
+
+```bash
+python src/search_hybrid_qwen.py "What markers identify regulatory T cells?"
+```
+
+The vector-only diagnostic lives under `tools/debug/` because it intentionally
+isolates dense embedding search and skips aliases, BM25, FAISS, reranking, and
+answer generation:
+
+```bash
+python tools/debug/search_qwen_vectors.py "What is a regulatory T cell?"
+```
+
 ## Running On CCI
 
 Use this path only if you have access to the server-side runtime artifacts.
@@ -404,7 +443,7 @@ scripts/status_all.sh
 Start or repair the public hosted API:
 
 ```bash
-scripts/init_public_demo.sh
+scripts/init_public_demo.sh --publish-endpoint
 scripts/status_public_demo_tunnel.sh
 ```
 
@@ -543,7 +582,7 @@ Then start the server with the expanded paths printed by the script, or update
 Run the dependency-free fresh-clone checks on any machine with Python 3.12+:
 
 ```bash
-python -m compileall -q src examples scripts tests
+python -m compileall -q src examples scripts tools tests
 python -m unittest discover -s tests -v
 ```
 

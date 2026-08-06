@@ -18,29 +18,27 @@ These runtime files are kept on CCI. They are intentionally excluded from the
 GitHub repo so the code can be cloned and used against the hosted API without
 downloading models or rebuilding source artifacts.
 
-Current combined embedding summary:
+Current combined embedding state:
 
-- chunks: `325,815`
-- aliases: `2,712,338`
-- embedding dimension: `4,096`
+- combined chunks and aliases are generated on the CCI runtime
 - embedding model: `models/Qwen3-Embedding-8B`
 - pooling: last-token pooling
 - normalized vectors: yes
 
 ## Active Sources
 
-| Source | Source type | Purpose | Chunks |
-|---|---|---|---:|
-| Cell Ontology | `cell_ontology` | Cell type names, IDs, definitions, synonyms, hierarchy, and relationships. | `3,335` |
-| Uberon | `anatomy_ontology` | Anatomy, tissue, and organ terms used as biological context. | `14,977` |
-| Gene Ontology | `gene_ontology` | Biological process, molecular function, and cellular component definitions. | `38,245` |
-| PATO | `phenotype_quality_ontology` | Phenotype quality terms such as color, size, and morphology qualities. | `1,887` |
-| CELLxGENE Census | `single_cell_atlas_metadata` | Aggregated cell type/tissue/disease/assay evidence from Census `obs` metadata. | `975` |
-| HGNC | `gene_nomenclature` | Official human gene symbols, names, aliases, previous symbols, and cross-references. | `45,021` |
-| NCBI Gene Human | `gene_reference` | Entrez Gene IDs, symbols, synonyms, descriptions, chromosome/map location, gene type, and cross-references. | `193,802` |
-| UniProtKB Reviewed Human | `protein_function` | Reviewed human protein names, function comments, GO IDs, and cross-references. | `20,431` |
-| CellMarker 3.0 | `cell_marker_database` | Cell-type marker gene sets by species, tissue, disease context, method, PMID, and ontology ID. | `6,801` |
-| PanglaoDB | `cell_marker_database` | Curated mouse/human marker gene associations with organ, germ-layer, sensitivity, and specificity fields. | `341` |
+| Source | Source type | Purpose |
+|---|---|---|
+| Cell Ontology | `cell_ontology` | Cell type names, IDs, definitions, synonyms, hierarchy, and relationships. |
+| Uberon | `anatomy_ontology` | Anatomy, tissue, and organ terms used as biological context. |
+| Gene Ontology | `gene_ontology` | Biological process, molecular function, and cellular component definitions. |
+| PATO | `phenotype_quality_ontology` | Phenotype quality terms such as color, size, and morphology qualities. |
+| CELLxGENE Census | `single_cell_atlas_metadata` | Aggregated cell type/tissue/disease/assay evidence from Census `obs` metadata. |
+| HGNC | `gene_nomenclature` | Official human gene symbols, names, aliases, previous symbols, and cross-references. |
+| NCBI Gene Human | `gene_reference` | Entrez Gene IDs, symbols, synonyms, descriptions, chromosome/map location, gene type, and cross-references. |
+| UniProtKB Reviewed Human | `protein_function` | Reviewed human protein names, function comments, GO IDs, and cross-references. |
+| CellMarker 3.0 | `cell_marker_database` | Cell-type marker gene sets by species, tissue, disease context, method, PMID, and ontology ID. |
+| PanglaoDB | `cell_marker_database` | Curated mouse/human marker gene associations with organ, germ-layer, sensitivity, and specificity fields. |
 
 ## Source Links
 
@@ -90,7 +88,7 @@ Current scope:
 - top `200` human primary-data cell types
 - top `5` tissue/disease/assay evidence groups per cell type
 - minimum unique cells per selected cell type: `1,000`
-- output chunks: `975`
+- output chunks are generated as part of the combined CCI runtime corpus
 
 Each CELLxGENE chunk includes:
 

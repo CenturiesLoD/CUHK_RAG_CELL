@@ -13,6 +13,20 @@ import urllib.request
 from endpoint_discovery import resolve_base_url
 
 
+HOSTED_BACKEND_RECOVERY_HINT = """Hosted backend may be down or the published tunnel URL may be stale.
+If you have CCI SSH access, restart and republish the hosted stack:
+
+Linux/macOS:
+ssh -p 20484 -i /path/to/private_key root@118.145.32.133 \\
+  "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+
+Windows PowerShell:
+ssh -p 20484 -i C:\\path\\to\\private_key root@118.145.32.133 "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+
+Then rerun:
+python examples/smoke_hosted_demo.py"""
+
+
 def request_json(
     method: str,
     url: str,
@@ -126,5 +140,14 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception as exc:
-        print(json.dumps({"errors": [str(exc)]}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "errors": [str(exc)],
+                    "recovery_hint": HOSTED_BACKEND_RECOVERY_HINT,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         sys.exit(1)

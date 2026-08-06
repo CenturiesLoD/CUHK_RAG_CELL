@@ -21,7 +21,7 @@ On CCI:
 
 ```bash
 cd /data/L202500484/cell_rag
-scripts/init_public_demo.sh
+scripts/init_public_demo.sh --publish-endpoint
 ```
 
 The script:
@@ -38,7 +38,7 @@ The script:
 To force a new quick-tunnel URL:
 
 ```bash
-scripts/init_public_demo.sh --restart-tunnel
+scripts/init_public_demo.sh --restart-tunnel --publish-endpoint
 ```
 
 To update the GitHub endpoint manifest from CCI after generating a URL:

@@ -66,9 +66,8 @@ CCI backend carries the large model and corpus state.
 
 Current combined index:
 
-- chunks: `325,815`
-- aliases: `2,712,338`
-- embedding shape: `[325815, 4096]`
+- combined chunks and aliases are generated from the active source families on CCI
+- embeddings are stored with metadata alignment files
 - embedding model: `models/Qwen3-Embedding-8B`
 - answer model: local `qwen3-32b` served through vLLM
 - public API wrapper on `127.0.0.1:8020`
@@ -100,6 +99,11 @@ vectors are precomputed independently. The reranker is slower, but it can make a
 better final top-K choice among candidates found by aliases, BM25, and vector
 search.
 
+Two retrieval CLIs are kept for different debugging scopes. `src/search_hybrid_qwen.py`
+tests the combined retrieval recipe used by the server. `tools/debug/search_qwen_vectors.py`
+is a low-level dense-vector diagnostic; it skips aliases, BM25, FAISS, reranking,
+and answer generation so embedding behavior can be isolated.
+
 ## Answer Grounding
 
 The answer endpoint retrieves context, calls the local LLM, and returns cited
@@ -128,8 +132,8 @@ does not load a second model and it does not change retrieval behavior. It expos
 - `POST /search` for retrieval-only inspection.
 
 For external access, it is intended to be reached through the hosted CCI demo URL
-created by `scripts/ensure_hosted_demo.sh`. SSH tunneling remains available for
-local debugging.
+created by `scripts/init_public_demo.sh --publish-endpoint`. SSH tunneling
+remains available for local debugging.
 
 ## Validation
 

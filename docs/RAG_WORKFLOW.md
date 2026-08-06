@@ -26,6 +26,7 @@ raw source file or API
 - `models/`: local embedding, reranker, and LLM model snapshots.
 - `sources/source_registry.json`: server-side provenance and intended-use metadata for every active source.
 - `eval/`: retrieval and answer smoke tests.
+- `tools/debug/`: low-level diagnostic CLIs that are not part of normal serving.
 - `scripts/ensure_cell_rag_stack.ps1`: Windows helper for remote stack startup.
 - `docs/HOSTED_DEMO.md`: hosted public demo backend workflow.
 
@@ -48,7 +49,7 @@ model loading, retrieval artifacts, and source-data storage.
 | `scripts/build_faiss_index.sh` | Optional FAISS ANN index | `embeddings/rag_qwen3_embedding_8b.ivfflat.faiss` |
 | `scripts/download_reranker_model.sh` | Optional neural reranker model | `models/ms-marco-MiniLM-L-6-v2` |
 | `scripts/start_public_api.sh` | Public API wrapper | `http://127.0.0.1:8020` |
-| `scripts/ensure_hosted_demo.sh` | Public hosted demo backend | Cloudflare quick-tunnel URL |
+| `scripts/init_public_demo.sh --publish-endpoint` | Public hosted demo backend | Cloudflare quick-tunnel URL and endpoint manifest |
 
 ## Rebuild Order
 
@@ -196,6 +197,11 @@ answer citations, valid and invalid citations, uncited factual-looking claim
 units, and a `passed` flag. Answer smoke tests require this field to exist and
 pass, so citation regressions are caught through the normal eval path.
 
+For one-off retrieval debugging, use `src/search_hybrid_qwen.py` to inspect the
+combined alias, lexical, and vector ranking path. Use
+`tools/debug/search_qwen_vectors.py` only when isolating dense-vector behavior;
+it bypasses aliases, BM25, FAISS, reranking, and answer generation.
+
 The public API wrapper exposes a smaller surface
 for live demonstration:
 
@@ -210,7 +216,7 @@ binds only to `127.0.0.1`; use the Windows tunnel script for local external acce
 For external access without SSH, use the hosted demo backend:
 
 ```bash
-scripts/ensure_hosted_demo.sh
+scripts/init_public_demo.sh --publish-endpoint
 scripts/status_public_demo_tunnel.sh
 ```
 

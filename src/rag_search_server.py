@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Persistent FastAPI service for Cell Ontology RAG search and answers."""
+"""Persistent FastAPI service for multi-source single-cell RAG search and answers."""
 
 from __future__ import annotations
 
