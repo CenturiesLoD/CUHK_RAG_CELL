@@ -1,7 +1,7 @@
 {
-  "base_url": "https://fits-sail-fate-place.trycloudflare.com",
-  "status_url": "https://fits-sail-fate-place.trycloudflare.com/health",
-  "updated_at_utc": "2026-08-05T06:19:17Z",
+  "base_url": "https://girlfriend-fashion-micro-conduct.trycloudflare.com",
+  "status_url": "https://girlfriend-fashion-micro-conduct.trycloudflare.com/health",
+  "updated_at_utc": "2026-08-06T04:45:48Z",
   "backend": "CCI Cloudflare quick tunnel",
   "note": "This URL is discovered through this stable GitHub manifest. If the quick tunnel restarts, update this file with the new URL."
 }
