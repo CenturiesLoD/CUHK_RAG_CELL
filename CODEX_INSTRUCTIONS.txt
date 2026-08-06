@@ -9,16 +9,16 @@ docs/HOSTED_DEMO.md for the hosted API workflow.
 Primary paths and hosts
 -----------------------
 Local lightweight repo:
-  C:\Users\JXZ\Documents\Codex\rag_remote_patch
+  <LOCAL_REPO_DIR>
 
 CCI runtime:
-  /data/L202500484/cell_rag
+  <CCI_RUNTIME_DIR>
 
 Primary CCI SSH target:
-  root@118.145.32.133 -p 20484
+  <CCI_USER>@<CCI_HOST> -p <CCI_SSH_PORT>
 
 Windows SSH key usually used by this workspace:
-  C:\Users\JXZ\.ssh\public_key
+  <LOCAL_SSH_IDENTITY_FILE>
 
 Use the repo scripts instead of rebuilding ad hoc shell commands when possible.
 The CCI runtime contains large data and model artifacts that are intentionally
@@ -40,7 +40,7 @@ Never add these directories or their generated contents to Git:
   .endpoint_repo/
 
 The public API key lives on CCI at:
-  /data/L202500484/cell_rag/secrets/public_api_key.txt
+  <CCI_RUNTIME_DIR>/secrets/public_api_key.txt
 
 Do not print secrets unless the user explicitly asks for a private handoff.
 If a GitHub personal access token is pasted into chat, treat it as compromised
@@ -57,7 +57,7 @@ Raw manifest URL:
 
 The CCI runtime folder is not a Git checkout. Automatic publishing uses this
 separate lightweight checkout:
-  /data/L202500484/cell_rag/.endpoint_repo
+  <CCI_RUNTIME_DIR>/.endpoint_repo
 
 The publisher should push through GitHub SSH over port 443:
   ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_CELL.git
@@ -66,7 +66,7 @@ Do not switch it back to git@github.com:CenturiesLoD/CUHK_RAG_CELL.git unless
 CCI outbound SSH port 22 has been confirmed. Port 22 timed out from CCI.
 
 The deploy key private half is stored on CCI:
-  /data/L202500484/cell_rag/secrets/github_deploy_key
+  <CCI_RUNTIME_DIR>/secrets/github_deploy_key
 
 GitHub must contain the matching public deploy key with write access under:
   CenturiesLoD/CUHK_RAG_CELL -> Settings -> Deploy keys
@@ -78,15 +78,15 @@ script-level guard, not a GitHub file-level permission.
 Normal endpoint refresh commands
 --------------------------------
 If the backend is already running and only the manifest needs updating:
-  cd /data/L202500484/cell_rag
+  cd <CCI_RUNTIME_DIR>
   PUBLISH_ENDPOINT_PUSH=1 scripts/publish_public_endpoint.sh
 
 If the backend may need repair, but the same tunnel can be reused:
-  cd /data/L202500484/cell_rag
+  cd <CCI_RUNTIME_DIR>
   scripts/init_public_demo.sh --publish-endpoint
 
 If a fresh Cloudflare URL is needed:
-  cd /data/L202500484/cell_rag
+  cd <CCI_RUNTIME_DIR>
   scripts/init_public_demo.sh --restart-tunnel --publish-endpoint
 
 Avoid restarting the LLM unless necessary. A cold Qwen3-32B vLLM startup can
@@ -141,7 +141,7 @@ LLM endpoint:
 Expected RAG health traits:
   vector_backend: faiss
   reranker_loaded: true
-  chunks: 325815
+  chunks: generated on the active CCI runtime
   model served name: qwen3-32b
 
 Known remaining product limits
