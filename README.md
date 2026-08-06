@@ -1,4 +1,4 @@
-# CUHK RAG Cell
+# SLAI RAG Cell
 
 A Retrieval-Augmented Generation system for single-cell biology question answering.
 
@@ -19,6 +19,9 @@ server; your local machine only sends API requests.
 git clone https://github.com/CenturiesLoD/CUHK_RAG_CELL.git
 cd CUHK_RAG_CELL
 ```
+
+The project-facing name is SLAI RAG Cell, but the current GitHub repository slug
+is still `CenturiesLoD/CUHK_RAG_CELL`.
 
 If `git clone` is unavailable, download the GitHub ZIP archive for `main` and
 open a terminal in the extracted folder.
@@ -323,7 +326,8 @@ powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.p
   -HostName <CCI_HOST> `
   -Port <CCI_SSH_PORT> `
   -User <CCI_USER> `
-  -RuntimeDir <CCI_RUNTIME_DIR>
+  -RuntimeDir <CCI_RUNTIME_DIR> `
+  -PublishEndpoint
 ```
 
 The Windows helper checks `CELL_RAG_SSH_KEY`, then looks for `public_key`,
