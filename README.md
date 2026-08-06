@@ -47,15 +47,19 @@ If you have SSH access to the CCI runtime, start the full hosted stack with one
 remote command:
 
 ```bash
-ssh -p 20484 -i /path/to/private_key root@118.145.32.133 \
-  "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+ssh -p <CCI_SSH_PORT> -i /path/to/private_key <CCI_USER>@<CCI_HOST> \
+  "cd <CCI_RUNTIME_DIR> && scripts/init_public_demo.sh --publish-endpoint"
 ```
 
 Windows PowerShell:
 
 ```powershell
-ssh -p 20484 -i C:\path\to\private_key root@118.145.32.133 "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+ssh -p <CCI_SSH_PORT> -i C:\path\to\private_key <CCI_USER>@<CCI_HOST> "cd <CCI_RUNTIME_DIR> && scripts/init_public_demo.sh --publish-endpoint"
 ```
+
+Keep the concrete CCI host, SSH user, SSH port, and runtime directory in a
+private handoff note or local environment variables. Do not commit those values
+to the public repo.
 
 That command starts or repairs the local vLLM model server, RAG API, public API
 wrapper, and Cloudflare tunnel. It also publishes the current public endpoint to:
@@ -72,15 +76,16 @@ directory is mounted and visible in that image.
 Check the required runtime paths first:
 
 ```bash
-ls -lah /data/L202500484/cell_rag
-ls -lah /data/L202500484/cell_rag/models/Qwen3-32B
-ls -lah /data/L202500484/cell_rag/embeddings/rag_qwen3_embedding_8b.npz
+export CELL_RAG_RUNTIME_DIR="<CCI_RUNTIME_DIR>"
+ls -lah "$CELL_RAG_RUNTIME_DIR"
+ls -lah "$CELL_RAG_RUNTIME_DIR/models/Qwen3-32B"
+ls -lah "$CELL_RAG_RUNTIME_DIR/embeddings/rag_qwen3_embedding_8b.npz"
 ```
 
 If those paths exist, run:
 
 ```bash
-cd /data/L202500484/cell_rag
+cd "$CELL_RAG_RUNTIME_DIR"
 scripts/init_public_demo.sh --publish-endpoint
 ```
 
@@ -90,11 +95,11 @@ Fresh CCI images may not include Git. If endpoint publishing fails with
 ```bash
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y git
-cd /data/L202500484/cell_rag
+cd "$CELL_RAG_RUNTIME_DIR"
 scripts/init_public_demo.sh --publish-endpoint
 ```
 
-If the `/data/L202500484/cell_rag` path is missing, the GitHub repo alone is not
+If the runtime directory is missing, the GitHub repo alone is not
 enough to run the backend. The model weights, corpus chunks, embeddings, FAISS
 index, source registry, secrets, and Python environments live in that shared CCI
 runtime directory.
@@ -118,14 +123,14 @@ CCI SSH access:
 Linux/macOS:
 
 ```bash
-ssh -p 20484 -i /path/to/private_key root@118.145.32.133 \
-  "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+ssh -p <CCI_SSH_PORT> -i /path/to/private_key <CCI_USER>@<CCI_HOST> \
+  "cd <CCI_RUNTIME_DIR> && scripts/init_public_demo.sh --publish-endpoint"
 ```
 
 Windows PowerShell:
 
 ```powershell
-ssh -p 20484 -i C:\path\to\private_key root@118.145.32.133 "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+ssh -p <CCI_SSH_PORT> -i C:\path\to\private_key <CCI_USER>@<CCI_HOST> "cd <CCI_RUNTIME_DIR> && scripts/init_public_demo.sh --publish-endpoint"
 ```
 
 Then rerun:
@@ -195,7 +200,7 @@ Excluded by `.gitignore`:
 The full CCI runtime lives at:
 
 ```text
-/data/L202500484/cell_rag
+<CCI_RUNTIME_DIR>
 ```
 
 ## Current System
@@ -250,7 +255,7 @@ hardcoding the tunnel hostname.
 The current URL can also be checked on CCI with:
 
 ```bash
-cd /data/L202500484/cell_rag
+cd <CCI_RUNTIME_DIR>
 scripts/status_public_demo_tunnel.sh
 ```
 
@@ -307,19 +312,25 @@ and creates or refreshes the public URL.
 From CCI:
 
 ```bash
-cd /data/L202500484/cell_rag
+cd <CCI_RUNTIME_DIR>
 scripts/init_public_demo.sh --publish-endpoint
 ```
 
 From Windows, using SSH:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1
+powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1 `
+  -HostName <CCI_HOST> `
+  -Port <CCI_SSH_PORT> `
+  -User <CCI_USER> `
+  -RuntimeDir <CCI_RUNTIME_DIR>
 ```
 
 The Windows helper checks `CELL_RAG_SSH_KEY`, then looks for `public_key`,
-`id_ed25519`, or `id_rsa` under the current user's `.ssh` directory. For a key
-stored elsewhere, pass `-IdentityFile C:\path\to\key`.
+`id_ed25519`, or `id_rsa` under the current user's `.ssh` directory. It also
+accepts `CELL_RAG_SSH_HOST`, `CELL_RAG_SSH_PORT`, `CELL_RAG_SSH_USER`, and
+`CELL_RAG_RUNTIME_DIR`. For a key stored elsewhere, pass
+`-IdentityFile C:\path\to\key`.
 
 Force a fresh quick-tunnel URL:
 
@@ -433,7 +444,7 @@ python src/search_qwen_vectors.py "What is a regulatory T cell?"
 Use this path only if you have access to the server-side runtime artifacts.
 
 ```bash
-cd /data/L202500484/cell_rag
+cd <CCI_RUNTIME_DIR>
 scripts/ensure_stack.sh
 scripts/status_all.sh
 ```

@@ -17,11 +17,11 @@ HOSTED_BACKEND_RECOVERY_HINT = """Hosted backend may be down or the published tu
 If you have CCI SSH access, restart and republish the hosted stack:
 
 Linux/macOS:
-ssh -p 20484 -i /path/to/private_key root@118.145.32.133 \\
-  "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+ssh -p <CCI_SSH_PORT> -i /path/to/private_key <CCI_USER>@<CCI_HOST> \\
+  "cd <CCI_RUNTIME_DIR> && scripts/init_public_demo.sh --publish-endpoint"
 
 Windows PowerShell:
-ssh -p 20484 -i C:\\path\\to\\private_key root@118.145.32.133 "cd /data/L202500484/cell_rag && scripts/init_public_demo.sh --publish-endpoint"
+ssh -p <CCI_SSH_PORT> -i C:\\path\\to\\private_key <CCI_USER>@<CCI_HOST> "cd <CCI_RUNTIME_DIR> && scripts/init_public_demo.sh --publish-endpoint"
 
 Then rerun:
 python examples/smoke_hosted_demo.py"""

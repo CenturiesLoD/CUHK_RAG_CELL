@@ -20,7 +20,7 @@ Client
 On CCI:
 
 ```bash
-cd /data/L202500484/cell_rag
+cd <CCI_RUNTIME_DIR>
 scripts/init_public_demo.sh --publish-endpoint
 ```
 
@@ -50,12 +50,19 @@ scripts/init_public_demo.sh --publish-endpoint
 From Windows, if SSH access to CCI is configured:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1
+powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1 `
+  -HostName <CCI_HOST> `
+  -Port <CCI_SSH_PORT> `
+  -User <CCI_USER> `
+  -RuntimeDir <CCI_RUNTIME_DIR>
 ```
 
 The helper uses `CELL_RAG_SSH_KEY` when set, otherwise it checks the current
-user's `.ssh` directory for `public_key`, `id_ed25519`, or `id_rsa`. Use
-`-IdentityFile C:\path\to\key` to select a different key.
+user's `.ssh` directory for `public_key`, `id_ed25519`, or `id_rsa`. It also
+accepts `CELL_RAG_SSH_HOST`, `CELL_RAG_SSH_PORT`, `CELL_RAG_SSH_USER`, and
+`CELL_RAG_RUNTIME_DIR`. Use `-IdentityFile C:\path\to\key` to select a
+different key. Keep the concrete CCI host, SSH user, SSH port, and runtime path
+outside Git.
 
 Some CCI runtime images can create the tunnel but cannot resolve their own
 `trycloudflare.com` hostname. In that case, verify the public URL from an
@@ -114,7 +121,7 @@ The CCI runtime directory is not a Git checkout. The automatic publisher uses a
 small checkout dedicated to GitHub updates:
 
 ```text
-/data/L202500484/cell_rag/.endpoint_repo
+<CCI_RUNTIME_DIR>/.endpoint_repo
 ```
 
 The publisher uses GitHub SSH over port `443` by default:

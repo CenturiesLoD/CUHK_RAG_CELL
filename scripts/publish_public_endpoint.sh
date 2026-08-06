@@ -20,7 +20,7 @@ Fresh CCI images may not include Git. Install it, then rerun:
 
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y git
-  cd /data/L202500484/cell_rag
+  cd <CCI_RUNTIME_DIR>
   scripts/init_public_demo.sh --publish-endpoint
 
 EOF

@@ -1,15 +1,27 @@
 param(
-    [string]$HostName = "118.145.32.133",
-    [int]$Port = 20484,
-    [string]$User = "root",
+    [string]$HostName = $env:CELL_RAG_SSH_HOST,
+    [int]$Port = $(if ($env:CELL_RAG_SSH_PORT) { [int]$env:CELL_RAG_SSH_PORT } else { 22 }),
+    [string]$User = $env:CELL_RAG_SSH_USER,
     [string]$IdentityFile = $env:CELL_RAG_SSH_KEY,
-    [string]$RuntimeDir = "/data/L202500484/cell_rag",
+    [string]$RuntimeDir = $env:CELL_RAG_RUNTIME_DIR,
     [switch]$RestartTunnel,
     [switch]$PublishEndpoint,
     [switch]$PrintApiKey
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $HostName) {
+    throw "Set -HostName or CELL_RAG_SSH_HOST."
+}
+
+if (-not $User) {
+    throw "Set -User or CELL_RAG_SSH_USER."
+}
+
+if (-not $RuntimeDir) {
+    throw "Set -RuntimeDir or CELL_RAG_RUNTIME_DIR."
+}
 
 if (-not $IdentityFile) {
     $userProfile = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)

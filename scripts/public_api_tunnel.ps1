@@ -1,7 +1,7 @@
 param(
     [string]$HostName = $env:CELL_RAG_SSH_HOST,
-    [int]$SshPort = 20484,
-    [string]$User = "root",
+    [int]$SshPort = $(if ($env:CELL_RAG_SSH_PORT) { [int]$env:CELL_RAG_SSH_PORT } else { 22 }),
+    [string]$User = $env:CELL_RAG_SSH_USER,
     [string]$IdentityFile = $env:CELL_RAG_SSH_KEY,
     [int]$LocalPort = 8020,
     [int]$RemotePort = 8020,
@@ -15,6 +15,10 @@ $ErrorActionPreference = "Stop"
 
 if (-not $HostName) {
     throw "Set -HostName or CELL_RAG_SSH_HOST."
+}
+
+if (-not $User) {
+    throw "Set -User or CELL_RAG_SSH_USER."
 }
 
 if (-not $IdentityFile) {

@@ -1,9 +1,9 @@
 param(
     [string]$HostName = $env:CELL_RAG_SSH_HOST,
-    [int]$SshPort = 20484,
-    [string]$User = "root",
+    [int]$SshPort = $(if ($env:CELL_RAG_SSH_PORT) { [int]$env:CELL_RAG_SSH_PORT } else { 22 }),
+    [string]$User = $env:CELL_RAG_SSH_USER,
     [string]$IdentityFile = $env:CELL_RAG_SSH_KEY,
-    [string]$RemoteProjectRoot = "/data/L202500484/cell_rag",
+    [string]$RemoteProjectRoot = $env:CELL_RAG_RUNTIME_DIR,
     [switch]$OpenTunnel
 )
 
@@ -11,6 +11,14 @@ $ErrorActionPreference = "Stop"
 
 if (-not $HostName) {
     throw "Set -HostName or CELL_RAG_SSH_HOST."
+}
+
+if (-not $User) {
+    throw "Set -User or CELL_RAG_SSH_USER."
+}
+
+if (-not $RemoteProjectRoot) {
+    throw "Set -RemoteProjectRoot or CELL_RAG_RUNTIME_DIR."
 }
 
 if (-not $IdentityFile) {
@@ -61,5 +69,5 @@ else {
     Write-Host ""
     Write-Host "To open the tunnel now, run:"
     $identityArgument = if ($IdentityFile) { " -IdentityFile `"$IdentityFile`"" } else { "" }
-    Write-Host "powershell -ExecutionPolicy Bypass -File scripts\public_api_tunnel.ps1 -HostName $HostName$identityArgument"
+    Write-Host "powershell -ExecutionPolicy Bypass -File scripts\public_api_tunnel.ps1 -HostName $HostName -SshPort $SshPort -User $User$identityArgument"
 }

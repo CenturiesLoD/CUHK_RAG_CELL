@@ -66,8 +66,8 @@ write_ssh_config() {
     cat > "$OUT_DIR/ssh_config.txt" <<'EOF'
 Host lepton-cci-h100
     HostName <CCI_H100_HOSTNAME_OR_IP>
-    Port 20484
-    User root
+    Port <CCI_SSH_PORT>
+    User <CCI_USER>
     IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
     IdentitiesOnly yes
     StrictHostKeyChecking no
@@ -75,8 +75,8 @@ Host lepton-cci-h100
 
 Host lepton-cci-old
     HostName <OLD_CCI_HOSTNAME_OR_IP>
-    Port 20484
-    User root
+    Port <OLD_CCI_SSH_PORT>
+    User <CCI_USER>
     IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
     IdentitiesOnly yes
     StrictHostKeyChecking no
@@ -97,13 +97,13 @@ ssh lepton-cci-h100
 Or without editing SSH config:
 
 ```powershell
-ssh -p 20484 -i <PATH_TO_SSH_IDENTITY_FILE> -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL root@<CCI_H100_HOSTNAME_OR_IP>
+ssh -p <CCI_SSH_PORT> -i <PATH_TO_SSH_IDENTITY_FILE> -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL <CCI_USER>@<CCI_H100_HOSTNAME_OR_IP>
 ```
 
 ## Project Root
 
 ```bash
-cd /data/L202500484/cell_rag
+cd <CCI_RUNTIME_DIR>
 ```
 
 ## Runtime Checks
@@ -127,7 +127,7 @@ scripts/ensure_cell_rag_stack.ps1
 From Windows, the one-command remote startup wrapper is:
 
 ```powershell
-scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
+scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -SshPort <CCI_SSH_PORT> -User <CCI_USER> -RemoteProjectRoot <CCI_RUNTIME_DIR> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
 ```
 
 ## Services
@@ -158,7 +158,7 @@ scripts/smoke_public_api.sh
 From Windows, run the local tunnel script:
 
 ```powershell
-scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
+scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -SshPort <CCI_SSH_PORT> -User <CCI_USER> -RemoteProjectRoot <CCI_RUNTIME_DIR> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
 ```
 
 Then open:
@@ -170,7 +170,7 @@ http://127.0.0.1:8020/docs
 For a one-time connectivity check that closes the tunnel automatically:
 
 ```powershell
-scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
+scripts\ensure_cell_rag_stack.ps1 -HostName <CCI_H100_HOSTNAME_OR_IP> -SshPort <CCI_SSH_PORT> -User <CCI_USER> -RemoteProjectRoot <CCI_RUNTIME_DIR> -IdentityFile <PATH_TO_SSH_IDENTITY_FILE>
 ```
 
 ## Current Core Artifacts
