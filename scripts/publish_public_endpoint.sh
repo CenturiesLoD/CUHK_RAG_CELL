@@ -10,6 +10,10 @@ DEPLOY_KEY="${PUBLIC_ENDPOINT_DEPLOY_KEY:-$ROOT/secrets/github_deploy_key}"
 GIT_USER_NAME="${PUBLIC_ENDPOINT_GIT_USER_NAME:-Cell RAG CCI}"
 GIT_USER_EMAIL="${PUBLIC_ENDPOINT_GIT_USER_EMAIL:-cell-rag-cci@users.noreply.github.com}"
 
+if [[ -f "$ROOT/scripts/ensure_system_packages.sh" ]]; then
+    bash "$ROOT/scripts/ensure_system_packages.sh" ca-certificates git openssh-client
+fi
+
 require_command() {
     if ! command -v "$1" >/dev/null 2>&1; then
         echo "Required command is missing: $1" >&2

@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+echo "== Ensure system packages =="
+bash scripts/ensure_system_packages.sh
+echo
+
 RESTART_TUNNEL=0
 PUBLISH_ENDPOINT=0
 PRINT_API_KEY=0

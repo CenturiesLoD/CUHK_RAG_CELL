@@ -26,6 +26,7 @@ scripts/init_public_demo.sh --publish-endpoint
 
 The script:
 
+- checks and installs required CCI system packages if missing;
 - ensures the LLM, RAG API, and public API wrapper are healthy;
 - generates or reuses the hosted API key file;
 - updates `.env` with `PUBLIC_API_KEY`;
@@ -34,6 +35,11 @@ The script:
 - starts a public quick tunnel;
 - writes the current public URL to `docs/current_endpoint.json`;
 - attempts a server-side public smoke test.
+
+The package check is handled by `scripts/ensure_system_packages.sh`. By default
+it installs missing packages with `apt-get` because fresh CCI images may not
+include tools such as `git`. Set `CELL_RAG_AUTO_INSTALL_SYSTEM_PACKAGES=0` to
+turn the check into a fail-fast verification step.
 
 To force a new quick-tunnel URL:
 

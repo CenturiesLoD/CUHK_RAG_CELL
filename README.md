@@ -71,6 +71,11 @@ wrapper, and Cloudflare tunnel. It also publishes the current public endpoint to
 https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
 ```
 
+At the beginning of startup, `scripts/init_public_demo.sh` runs
+`scripts/ensure_system_packages.sh`. On fresh CCI images, this checks and
+installs the small system packages needed by the demo startup path:
+`ca-certificates`, `curl`, `git`, `openssh-client`, `procps`, and `rsync`.
+
 ### 4. Running From A Different CCI Image
 
 The startup command works from another CCI image only if the shared runtime
@@ -92,14 +97,23 @@ cd "$CELL_RAG_RUNTIME_DIR"
 scripts/init_public_demo.sh --publish-endpoint
 ```
 
-Fresh CCI images may not include Git. If endpoint publishing fails with
-`Required command is missing: git`, install Git and rerun:
+Fresh CCI images may not include all system packages. The startup command
+checks and installs the expected packages automatically by default. If automatic
+installation is disabled or blocked, install the required packages manually and
+rerun:
 
 ```bash
 apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y git
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  ca-certificates curl git openssh-client procps rsync
 cd "$CELL_RAG_RUNTIME_DIR"
 scripts/init_public_demo.sh --publish-endpoint
+```
+
+To verify packages without allowing automatic installation:
+
+```bash
+CELL_RAG_AUTO_INSTALL_SYSTEM_PACKAGES=0 scripts/init_public_demo.sh --publish-endpoint
 ```
 
 If the runtime directory is missing, the GitHub repo alone is not

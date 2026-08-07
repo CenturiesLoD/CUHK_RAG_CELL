@@ -24,6 +24,14 @@ Use the repo scripts instead of rebuilding ad hoc shell commands when possible.
 The CCI runtime contains large data and model artifacts that are intentionally
 not present in GitHub.
 
+Fresh CCI images may be missing system packages even when the shared runtime
+directory is intact. Use `scripts/init_public_demo.sh --publish-endpoint`; it
+calls `scripts/ensure_system_packages.sh` before starting the stack. That helper
+checks and installs `ca-certificates`, `curl`, `git`, `openssh-client`,
+`procps`, and `rsync` by default. Set
+`CELL_RAG_AUTO_INSTALL_SYSTEM_PACKAGES=0` only when you need verification
+without installation.
+
 Important runtime directories that must not be committed
 -------------------------------------------------------
 Never add these directories or their generated contents to Git:
