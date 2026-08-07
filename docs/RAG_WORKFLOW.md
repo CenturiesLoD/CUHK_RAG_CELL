@@ -196,11 +196,14 @@ answer citations, valid and invalid citations, uncited factual-looking claim
 units, and a `passed` flag. Answer smoke tests require this field to exist and
 pass, so citation regressions are caught through the normal eval path.
 
-Clear conversational/control inputs, such as `hi`, `thanks`, `test`, and
-`what can you do`, bypass retrieval before context construction. They return a
-short uncited response, no sources, `confidence: none`, and a passing
-zero-claim `citation_check`. This prevents the grounding layer from attaching a
-random source ID to a greeting.
+Clear conversational/control inputs, such as `hi`, `hiii~`, `thanks`, `test`,
+`what can you do`, and `Just talk to me then`, bypass retrieval before context
+construction. They return a short uncited response, no sources,
+`confidence: none`, and a passing zero-claim `citation_check`. If a
+non-biomedical query reaches retrieval but scores too weakly to answer, the
+server returns a citation-free conversational fallback instead of forcing an
+irrelevant source. This prevents the grounding layer from attaching a random
+source ID to a greeting or chat prompt.
 
 For one-off retrieval debugging, use `src/search_hybrid_qwen.py` to inspect the
 combined alias, lexical, and vector ranking path. Use

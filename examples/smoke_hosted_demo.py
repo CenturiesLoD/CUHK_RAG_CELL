@@ -82,8 +82,11 @@ def main() -> int:
         errors.append("missing API key for authenticated endpoints")
         answer = {}
         greeting_answer = {}
+        stretched_greeting_answer = {}
+        chat_answer = {}
         search = {}
         greeting_search = {}
+        chat_search = {}
     else:
         _, answer = request_json(
             "POST",
@@ -97,6 +100,18 @@ def main() -> int:
             api_key=args.api_key,
             payload={"question": "hi", "top_k": 3, "max_tokens": 80},
         )
+        _, stretched_greeting_answer = request_json(
+            "POST",
+            f"{base_url}/ask",
+            api_key=args.api_key,
+            payload={"question": "hiii~", "top_k": 3, "max_tokens": 80},
+        )
+        _, chat_answer = request_json(
+            "POST",
+            f"{base_url}/ask",
+            api_key=args.api_key,
+            payload={"question": "Just talk to me then", "top_k": 3, "max_tokens": 80},
+        )
         _, search = request_json(
             "POST",
             f"{base_url}/search",
@@ -109,6 +124,13 @@ def main() -> int:
             f"{base_url}/search",
             api_key=args.api_key,
             payload={"query": "hi", "top_k": 3},
+            timeout=120,
+        )
+        _, chat_search = request_json(
+            "POST",
+            f"{base_url}/search",
+            api_key=args.api_key,
+            payload={"query": "Just talk to me then", "top_k": 3},
             timeout=120,
         )
 
@@ -125,8 +147,19 @@ def main() -> int:
             errors.append("conversational greeting returned citations or sources")
         if not greeting_answer.get("citation_check", {}).get("passed"):
             errors.append("conversational greeting citation_check did not pass")
+        for label, payload in {
+            "stretched greeting": stretched_greeting_answer,
+            "chat request": chat_answer,
+        }.items():
+            text = str(payload.get("answer", ""))
+            if "[" in text or payload.get("sources"):
+                errors.append(f"conversational {label} returned citations or sources")
+            if not payload.get("citation_check", {}).get("passed"):
+                errors.append(f"conversational {label} citation_check did not pass")
         if greeting_search.get("results"):
             errors.append("conversational search returned retrieval results")
+        if chat_search.get("results"):
+            errors.append("conversational chat search returned retrieval results")
 
     if health_status != 200:
         errors.append(f"/health status was {health_status}")
@@ -144,7 +177,10 @@ def main() -> int:
         "citation_check": answer.get("citation_check") if isinstance(answer, dict) else None,
         "greeting_answer": greeting_answer.get("answer") if isinstance(greeting_answer, dict) else None,
         "greeting_citation_check": greeting_answer.get("citation_check") if isinstance(greeting_answer, dict) else None,
+        "stretched_greeting_answer": stretched_greeting_answer.get("answer") if isinstance(stretched_greeting_answer, dict) else None,
+        "chat_answer": chat_answer.get("answer") if isinstance(chat_answer, dict) else None,
         "greeting_search_result_count": len(greeting_search.get("results", [])) if isinstance(greeting_search, dict) else None,
+        "chat_search_result_count": len(chat_search.get("results", [])) if isinstance(chat_search, dict) else None,
         "ask_source_ids": [
             source.get("doc_id") for source in answer.get("sources", [])
         ]

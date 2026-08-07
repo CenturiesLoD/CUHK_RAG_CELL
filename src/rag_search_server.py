@@ -19,8 +19,12 @@ from transformers import AutoModel, AutoModelForSequenceClassification, AutoToke
 from query_guards import (
     conversational_answer,
     conversational_citation_check,
+    conversational_fallback_answer,
     conversational_retrieval_quality,
+    has_biomedical_intent,
     is_conversational_query,
+    is_conversational_response,
+    strip_inline_citations,
 )
 from search_hybrid_qwen import (
     DEFAULT_QUERY_TASK,
@@ -894,12 +898,23 @@ def ground_answer(answer: str, sources: list[dict[str, Any]]) -> str:
     answer = trim_incomplete_tail(THINK_BLOCK_RE.sub("", answer).strip())
     if not answer or "retrieved context is insufficient" in answer.casefold() or not source_ids:
         return answer
+    if is_conversational_response(answer):
+        return strip_inline_citations(answer)
     answer = normalize_answer_citations(answer, source_ids)
     return ensure_sentence_citations(answer, source_ids[0])
 
 
 def ground_answer_with_audit(raw_answer: str, sources: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
     cleaned_answer = trim_incomplete_tail(THINK_BLOCK_RE.sub("", raw_answer).strip())
+    if is_conversational_response(cleaned_answer):
+        citation_check = conversational_citation_check()
+        citation_check["grounding_modified_answer"] = strip_inline_citations(cleaned_answer) != cleaned_answer
+        citation_check["pre_grounding_passed"] = True
+        citation_check["pre_grounding_invalid_citations"] = []
+        citation_check["pre_grounding_citationless_claims"] = []
+        citation_check["conversational_output"] = True
+        return strip_inline_citations(cleaned_answer), citation_check
+
     pre_grounding_check = audit_answer_citations(cleaned_answer, sources)
     grounded_answer = ground_answer(cleaned_answer, sources)
     citation_check = audit_answer_citations(grounded_answer, sources)
@@ -968,6 +983,20 @@ def answer(request: AnswerRequest) -> dict[str, Any]:
         return {"query": request.query, "retrieval_quality": retrieval_quality, "sources": sources, "messages": messages}
 
     if not retrieval_quality["should_answer"] and not request.allow_low_confidence:
+        if not has_biomedical_intent(request.query):
+            answer_text = conversational_fallback_answer(request.query)
+            fallback_quality = dict(retrieval_quality)
+            fallback_quality["should_answer"] = True
+            fallback_quality["answer_mode"] = "conversational_fallback"
+            fallback_quality["reason"] = f"{retrieval_quality.get('reason')}; non-biomedical query returned chat fallback"
+            return {
+                "query": request.query,
+                "answer": answer_text,
+                "retrieval_quality": fallback_quality,
+                "sources": [],
+                "citation_check": conversational_citation_check(),
+            }
+
         answer_text = "The retrieved context is insufficient to answer this question with confidence."
         return {
             "query": request.query,
@@ -977,7 +1006,21 @@ def answer(request: AnswerRequest) -> dict[str, Any]:
             "citation_check": audit_answer_citations(answer_text, sources),
         }
 
-    answer_text, citation_check = ground_answer_with_audit(call_chat(request, messages), sources)
+    raw_answer = call_chat(request, messages)
+    if is_conversational_response(raw_answer):
+        answer_text = strip_inline_citations(raw_answer)
+        fallback_quality = dict(retrieval_quality)
+        fallback_quality["answer_mode"] = "conversational_output"
+        fallback_quality["reason"] = f"{retrieval_quality.get('reason')}; model returned conversational output"
+        return {
+            "query": request.query,
+            "answer": answer_text,
+            "retrieval_quality": fallback_quality,
+            "sources": [],
+            "citation_check": conversational_citation_check(),
+        }
+
+    answer_text, citation_check = ground_answer_with_audit(raw_answer, sources)
     return {
         "query": request.query,
         "answer": answer_text,

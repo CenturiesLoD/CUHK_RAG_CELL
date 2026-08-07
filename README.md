@@ -582,9 +582,10 @@ Use `/search` when you want retrieval results without generation.
 ## How Retrieval Works
 
 Before retrieval, the API checks for clear conversational/control inputs such as
-`hi`, `thanks`, `test`, and `what can you do`. Those requests bypass retrieval
-and return a short uncited response with no sources. This prevents irrelevant
-corpus records from being attached to greetings.
+`hi`, `hiii~`, `thanks`, `test`, `what can you do`, and `Just talk to me then`.
+Those requests bypass retrieval and return a short uncited response with no
+sources. This prevents irrelevant corpus records from being attached to
+greetings or chat prompts.
 
 The RAG API combines several ranking signals:
 
@@ -608,7 +609,9 @@ Source-aware ranking helps route questions to the most appropriate source family
 
 The answer endpoint then builds a cited context prompt and calls the local
 OpenAI-compatible Qwen3-32B endpoint. It abstains when retrieval confidence is
-too low and returns a `citation_check` audit for the final answer.
+too low for a biomedical query. For low-confidence non-domain chat, it returns a
+citation-free conversational fallback instead of forcing an irrelevant source.
+Every answer includes a `citation_check` audit.
 
 For server-side retrieval debugging, use the hybrid CLI when you want behavior
 close to the RAG search stack:

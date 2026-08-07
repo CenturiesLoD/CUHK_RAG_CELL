@@ -110,8 +110,10 @@ The answer endpoint retrieves context, calls the local LLM, and returns cited
 answers. Grounding controls currently include:
 
 - abstention for low-confidence retrieval;
-- a conversational guard that bypasses retrieval for greetings and other
-  non-domain control inputs, preventing irrelevant citations;
+- a conversational guard that bypasses retrieval for greetings, chat prompts,
+  and other non-domain control inputs, preventing irrelevant citations;
+- a low-confidence non-domain fallback that returns chat text with no sources
+  instead of attaching unrelated RAG evidence;
 - prompt rules requiring use of retrieved context only;
 - source-block citations;
 - deterministic cleanup for incomplete trailing generations;
