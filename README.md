@@ -26,6 +26,12 @@ is still `CenturiesLoD/CUHK_RAG_CELL`.
 If `git clone` is unavailable, download the GitHub ZIP archive for `main` and
 open a terminal in the extracted folder.
 
+If you already cloned the repo, update before testing:
+
+```bash
+git pull
+```
+
 ### 2. Set The API Key
 
 Linux/macOS:
@@ -41,6 +47,30 @@ $env:CELL_RAG_DEMO_API_KEY="your-api-key"
 ```
 
 Do not commit real keys. The API key is only needed for `/ask` and `/search`.
+
+If you are the CCI operator and need to retrieve the existing key from the
+runtime, read it from the server-side secrets directory:
+
+```bash
+ssh -p <CCI_SSH_PORT> -i /path/to/private_key <CCI_USER>@<CCI_HOST> \
+  "cat <CCI_RUNTIME_DIR>/secrets/public_api_key.txt"
+```
+
+Windows PowerShell:
+
+```powershell
+ssh -p <CCI_SSH_PORT> -i C:\path\to\private_key <CCI_USER>@<CCI_HOST> "cat <CCI_RUNTIME_DIR>/secrets/public_api_key.txt"
+```
+
+You can also print it while starting the backend:
+
+```bash
+cd <CCI_RUNTIME_DIR>
+scripts/init_public_demo.sh --publish-endpoint --print-api-key
+```
+
+Use `--print-api-key` only for private handoff. Do not paste the key into Git,
+slides, issue trackers, or public chat.
 
 ### 3. Start Or Repair The CCI Backend
 
@@ -60,6 +90,33 @@ Windows PowerShell:
 ssh -p <CCI_SSH_PORT> -i C:\path\to\private_key <CCI_USER>@<CCI_HOST> "cd <CCI_RUNTIME_DIR> && scripts/init_public_demo.sh --publish-endpoint"
 ```
 
+If you prefer reusable environment variables:
+
+Linux/macOS:
+
+```bash
+export CELL_RAG_SSH_HOST="<CCI_HOST>"
+export CELL_RAG_SSH_PORT="<CCI_SSH_PORT>"
+export CELL_RAG_SSH_USER="<CCI_USER>"
+export CELL_RAG_SSH_KEY="/path/to/private_key"
+export CELL_RAG_RUNTIME_DIR="<CCI_RUNTIME_DIR>"
+
+ssh -p "$CELL_RAG_SSH_PORT" -i "$CELL_RAG_SSH_KEY" "$CELL_RAG_SSH_USER@$CELL_RAG_SSH_HOST" \
+  "cd '$CELL_RAG_RUNTIME_DIR' && scripts/init_public_demo.sh --publish-endpoint"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:CELL_RAG_SSH_HOST="<CCI_HOST>"
+$env:CELL_RAG_SSH_PORT="<CCI_SSH_PORT>"
+$env:CELL_RAG_SSH_USER="<CCI_USER>"
+$env:CELL_RAG_SSH_KEY="C:\path\to\private_key"
+$env:CELL_RAG_RUNTIME_DIR="<CCI_RUNTIME_DIR>"
+
+powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.ps1 -PublishEndpoint
+```
+
 Keep the concrete CCI host, SSH user, SSH port, and runtime directory in a
 private handoff note or local environment variables. Do not commit those values
 to the public repo.
@@ -76,10 +133,39 @@ At the beginning of startup, `scripts/init_public_demo.sh` runs
 installs the small system packages needed by the demo startup path:
 `ca-certificates`, `curl`, `git`, `openssh-client`, `procps`, and `rsync`.
 
+Successful startup should end with:
+
+```text
+System package check: ok
+LLM server already healthy
+RAG server already healthy
+Public API server already healthy
+Public smoke test passed
+Endpoint manifest published
+```
+
 ### 4. Running From A Different CCI Image
 
 The startup command works from another CCI image only if the shared runtime
 directory is mounted and visible in that image.
+
+CCI image/container state and CCI mounted data are different things. The mounted
+runtime directory can persist while OS packages installed yesterday disappear on
+a fresh image. This is expected:
+
+```text
+persistent shared runtime:
+  <CCI_RUNTIME_DIR>/models
+  <CCI_RUNTIME_DIR>/embeddings
+  <CCI_RUNTIME_DIR>/qwen_env
+  <CCI_RUNTIME_DIR>/vllm_env
+  <CCI_RUNTIME_DIR>/secrets
+
+image-local state that may disappear:
+  apt packages such as git or rsync
+  running processes
+  temporary /dev/shm model cache
+```
 
 Check the required runtime paths first:
 
@@ -116,6 +202,23 @@ To verify packages without allowing automatic installation:
 CELL_RAG_AUTO_INSTALL_SYSTEM_PACKAGES=0 scripts/init_public_demo.sh --publish-endpoint
 ```
 
+To run only the package repair step:
+
+```bash
+cd "$CELL_RAG_RUNTIME_DIR"
+bash scripts/ensure_system_packages.sh
+```
+
+To check only a smaller package set:
+
+```bash
+bash scripts/ensure_system_packages.sh git openssh-client
+```
+
+The package helper requires `apt-get` and root privileges for installation. If
+the image is locked down or not Ubuntu/Debian-based, install equivalent packages
+through the image's package manager before starting the backend.
+
 If the runtime directory is missing, the GitHub repo alone is not
 enough to run the backend. The model weights, corpus chunks, embeddings, FAISS
 index, source registry, secrets, and Python environments live in that shared CCI
@@ -131,6 +234,16 @@ the server dependencies from `requirements.txt` in the runtime environment.
 ```bash
 python examples/smoke_hosted_demo.py
 ```
+
+Before the full smoke test, you can check which URL the client will use:
+
+```bash
+python examples/endpoint_discovery.py
+```
+
+Expected output is the current public `https://...trycloudflare.com` URL. If it
+prints an old URL, run `git pull`; if it still prints an old URL after pulling,
+restart and republish from CCI with `scripts/init_public_demo.sh --publish-endpoint`.
 
 If this fails with `Name or service not known`, `getaddrinfo failed`, or another
 host/connection error, the hosted backend may be stopped or the published
@@ -164,6 +277,16 @@ Expected result:
 - authenticated `/ask` returns a cited answer.
 - `/search` returns retrieved source records.
 - `citation_check.passed` is `true`.
+
+Common recovery checks:
+
+| Symptom | Likely Cause | Fix |
+|---|---|---|
+| `Name or service not known` | stale or stopped Cloudflare quick tunnel | run `scripts/init_public_demo.sh --publish-endpoint` on CCI, then rerun the client |
+| `401 Unauthorized` | missing or wrong `CELL_RAG_DEMO_API_KEY` | reset the API key environment variable from `secrets/public_api_key.txt` |
+| `Required command is missing: git` | old runtime scripts or package check disabled | run `bash scripts/ensure_system_packages.sh`, then rerun startup |
+| endpoint discovery shows old URL | local clone or GitHub manifest is stale | `git pull`, then run `python examples/endpoint_discovery.py` again |
+| public smoke fails from CCI but works externally | CCI cannot resolve its own quick-tunnel hostname | use an external client smoke test as the public reachability check |
 
 ### 6. Enter User Mode
 
