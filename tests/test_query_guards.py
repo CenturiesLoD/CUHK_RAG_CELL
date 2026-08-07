@@ -9,6 +9,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.query_guards import (  # noqa: E402
+    INTENT_BIOMEDICAL_RAG,
+    INTENT_CONVERSATIONAL,
+    INTENT_UNCLEAR,
+    classify_query_intent,
     conversational_fallback_answer,
     conversational_answer,
     conversational_citation_check,
@@ -36,6 +40,51 @@ class QueryGuardTests(unittest.TestCase):
             with self.subTest(query=query):
                 self.assertFalse(is_conversational_query(query))
                 self.assertTrue(has_biomedical_intent(query))
+
+    def test_router_prefers_hard_biomedical_signals(self) -> None:
+        for query in ["CD20", "FOXP3", "T cell", "What is Treg?", "HGNC:374", "CL:0000815"]:
+            with self.subTest(query=query):
+                decision = classify_query_intent(query)
+                self.assertEqual(decision["intent"], INTENT_BIOMEDICAL_RAG)
+                self.assertEqual(decision["stage"], "pre_retrieval")
+                self.assertTrue(decision["needs_retrieval"])
+
+    def test_router_uses_alias_hits_as_biomedical_signal(self) -> None:
+        decision = classify_query_intent("regulatory t lymphocyte", alias_target_ids=["CL:0000815"])
+
+        self.assertEqual(decision["intent"], INTENT_BIOMEDICAL_RAG)
+        self.assertIn("exact corpus alias match", " ".join(decision["signals"]))
+
+    def test_router_does_not_let_alias_noise_override_chat(self) -> None:
+        decision = classify_query_intent("Just talk to me then", alias_target_ids=["NCBIGene:4321"])
+
+        self.assertEqual(decision["intent"], INTENT_CONVERSATIONAL)
+        self.assertFalse(decision["needs_retrieval"])
+
+    def test_router_prefers_hard_conversational_signals(self) -> None:
+        for query in ["hiii~", "Just talk to me then", "ok"]:
+            with self.subTest(query=query):
+                decision = classify_query_intent(query)
+                self.assertEqual(decision["intent"], INTENT_CONVERSATIONAL)
+                self.assertFalse(decision["needs_retrieval"])
+
+    def test_router_uses_retrieval_for_ambiguous_queries(self) -> None:
+        quality = {"confidence": "medium", "reason": "top result has partial retrieval support"}
+        results = [{"bm25_norm": 0.12, "rerank_score": 0.1, "neural_rerank_norm": 0.0, "reasons": ["bm25 lexical match"]}]
+
+        decision = classify_query_intent("regulatory suppressor population", retrieval_quality=quality, results=results)
+
+        self.assertEqual(decision["intent"], INTENT_BIOMEDICAL_RAG)
+        self.assertEqual(decision["stage"], "post_retrieval")
+
+    def test_router_keeps_weak_ambiguous_queries_unclear(self) -> None:
+        quality = {"confidence": "low", "reason": "top result has weak retrieval support"}
+        results = [{"bm25_norm": 0.0, "rerank_score": 0.0, "neural_rerank_norm": 0.0, "reasons": ["qwen3 vector match"]}]
+
+        decision = classify_query_intent("what is the weather", retrieval_quality=quality, results=results)
+
+        self.assertEqual(decision["intent"], INTENT_UNCLEAR)
+        self.assertEqual(decision["stage"], "post_retrieval")
 
     def test_conversational_response_has_no_citations_or_sources(self) -> None:
         answer = conversational_answer("hi")

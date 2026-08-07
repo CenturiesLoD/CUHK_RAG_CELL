@@ -110,6 +110,9 @@ The answer endpoint retrieves context, calls the local LLM, and returns cited
 answers. Grounding controls currently include:
 
 - abstention for low-confidence retrieval;
+- an intent router that classifies requests as `conversational`,
+  `biomedical_rag`, or `unclear` using hard domain signals, hard chat signals,
+  and retrieval evidence for ambiguous inputs;
 - a conversational guard that bypasses retrieval for greetings, chat prompts,
   and other non-domain control inputs, preventing irrelevant citations;
 - a low-confidence non-domain fallback that returns chat text with no sources

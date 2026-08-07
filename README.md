@@ -581,11 +581,20 @@ Use `/search` when you want retrieval results without generation.
 
 ## How Retrieval Works
 
-Before retrieval, the API checks for clear conversational/control inputs such as
-`hi`, `hiii~`, `thanks`, `test`, `what can you do`, and `Just talk to me then`.
-Those requests bypass retrieval and return a short uncited response with no
-sources. This prevents irrelevant corpus records from being attached to
-greetings or chat prompts.
+Before retrieval, the API runs an intent router:
+
+1. Normalize the query.
+2. Check hard biomedical signals: ontology IDs, HGNC/NCBI/UniProt-like IDs,
+   gene-symbol-like tokens, domain terms, and exact corpus alias matches.
+3. Check hard conversational signals: greetings, thanks, tests, help prompts,
+   and chat requests such as `hiii~` or `Just talk to me then`.
+4. If still ambiguous, run retrieval and inspect exact-match, lexical, rerank,
+   and confidence signals.
+
+The router returns `conversational`, `biomedical_rag`, or `unclear` in
+`retrieval_quality.query_intent`. Conversational requests bypass retrieval and
+return a short uncited response with no sources. Unclear non-domain requests use
+a citation-free chat fallback instead of attaching irrelevant corpus records.
 
 The RAG API combines several ranking signals:
 

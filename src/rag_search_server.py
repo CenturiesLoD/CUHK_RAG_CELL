@@ -17,12 +17,14 @@ from pydantic import BaseModel, Field
 from transformers import AutoModel, AutoModelForSequenceClassification, AutoTokenizer
 
 from query_guards import (
+    INTENT_BIOMEDICAL_RAG,
+    INTENT_CONVERSATIONAL,
+    INTENT_UNCLEAR,
+    classify_query_intent,
     conversational_answer,
     conversational_citation_check,
     conversational_fallback_answer,
     conversational_retrieval_quality,
-    has_biomedical_intent,
-    is_conversational_query,
     is_conversational_response,
     strip_inline_citations,
 )
@@ -928,6 +930,55 @@ def ground_answer_with_audit(raw_answer: str, sources: list[dict[str, Any]]) -> 
 engine = SearchEngine()
 
 
+def exact_alias_target_ids_for_query(query: str) -> list[str]:
+    query_norm = normalize(query)
+    candidates = {query_norm}
+    stripped = query_norm.strip(" ?!.:,;()[]{}\"'")
+    if stripped:
+        candidates.add(stripped)
+    focus = QUERY_PREFIX_RE.sub("", stripped).strip()
+    focus = ARTICLE_RE.sub("", focus).strip().strip(" ?!.:,;()[]{}\"'")
+    if focus:
+        candidates.add(focus)
+
+    target_ids: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        rows = list(engine.alias_index.get(candidate, []))
+        compact = candidate.replace(" ", "")
+        if compact.startswith("cl:"):
+            rows.extend(engine.alias_index.get(compact, []))
+        for row in rows:
+            target_id = str(row.get("target_id") or "").strip()
+            if target_id and target_id not in seen:
+                seen.add(target_id)
+                target_ids.append(target_id)
+    return target_ids
+
+
+def classify_request_intent(
+    query: str,
+    *,
+    retrieval_quality: dict[str, Any] | None = None,
+    results: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return classify_query_intent(
+        query,
+        alias_target_ids=exact_alias_target_ids_for_query(query),
+        retrieval_quality=retrieval_quality,
+        results=results,
+    )
+
+
+def attach_query_intent(
+    retrieval_quality: dict[str, Any],
+    query_intent: dict[str, Any],
+) -> dict[str, Any]:
+    output = dict(retrieval_quality)
+    output["query_intent"] = query_intent
+    return output
+
+
 @app.get("/health")
 def health() -> dict[str, Any]:
     return {
@@ -955,26 +1006,47 @@ def health() -> dict[str, Any]:
 
 @app.post("/search")
 def search(request: SearchRequest) -> dict[str, Any]:
-    if is_conversational_query(request.query):
-        return {"query": request.query, "retrieval_quality": conversational_retrieval_quality(), "results": []}
+    query_intent = classify_request_intent(request.query)
+    if query_intent["intent"] == INTENT_CONVERSATIONAL:
+        return {
+            "query": request.query,
+            "retrieval_quality": attach_query_intent(conversational_retrieval_quality(), query_intent),
+            "results": [],
+        }
 
     results = engine.search(request)
-    return {"query": request.query, "retrieval_quality": assess_retrieval(results), "results": results}
+    retrieval_quality = assess_retrieval(results)
+    query_intent = classify_request_intent(
+        request.query,
+        retrieval_quality=retrieval_quality,
+        results=results,
+    )
+    retrieval_quality = attach_query_intent(retrieval_quality, query_intent)
+    if query_intent["intent"] == INTENT_UNCLEAR:
+        return {"query": request.query, "retrieval_quality": retrieval_quality, "results": []}
+    return {"query": request.query, "retrieval_quality": retrieval_quality, "results": results}
 
 
 @app.post("/answer")
 def answer(request: AnswerRequest) -> dict[str, Any]:
-    if is_conversational_query(request.query):
+    query_intent = classify_request_intent(request.query)
+    if query_intent["intent"] == INTENT_CONVERSATIONAL:
         return {
             "query": request.query,
             "answer": conversational_answer(request.query),
-            "retrieval_quality": conversational_retrieval_quality(),
+            "retrieval_quality": attach_query_intent(conversational_retrieval_quality(), query_intent),
             "sources": [],
             "citation_check": conversational_citation_check(),
         }
 
     results = engine.search(request)
     retrieval_quality = assess_retrieval(results)
+    query_intent = classify_request_intent(
+        request.query,
+        retrieval_quality=retrieval_quality,
+        results=results,
+    )
+    retrieval_quality = attach_query_intent(retrieval_quality, query_intent)
     context = build_context(results, request.max_context_chars)
     messages = build_messages(request.query, context)
     sources = compact_sources(results)
@@ -982,8 +1054,22 @@ def answer(request: AnswerRequest) -> dict[str, Any]:
     if request.dry_run:
         return {"query": request.query, "retrieval_quality": retrieval_quality, "sources": sources, "messages": messages}
 
+    if query_intent["intent"] == INTENT_UNCLEAR and not request.allow_low_confidence:
+        answer_text = conversational_fallback_answer(request.query)
+        fallback_quality = dict(retrieval_quality)
+        fallback_quality["should_answer"] = True
+        fallback_quality["answer_mode"] = "conversational_fallback"
+        fallback_quality["reason"] = f"{retrieval_quality.get('reason')}; intent router did not find biomedical support"
+        return {
+            "query": request.query,
+            "answer": answer_text,
+            "retrieval_quality": fallback_quality,
+            "sources": [],
+            "citation_check": conversational_citation_check(),
+        }
+
     if not retrieval_quality["should_answer"] and not request.allow_low_confidence:
-        if not has_biomedical_intent(request.query):
+        if query_intent["intent"] != INTENT_BIOMEDICAL_RAG:
             answer_text = conversational_fallback_answer(request.query)
             fallback_quality = dict(retrieval_quality)
             fallback_quality["should_answer"] = True

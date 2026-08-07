@@ -196,14 +196,20 @@ answer citations, valid and invalid citations, uncited factual-looking claim
 units, and a `passed` flag. Answer smoke tests require this field to exist and
 pass, so citation regressions are caught through the normal eval path.
 
+The request path starts with an intent router. It normalizes the query, checks
+hard biomedical signals first, checks hard conversational signals second, and
+uses retrieval evidence only when the query is ambiguous. The final route is
+reported as `retrieval_quality.query_intent.intent` with one of:
+`conversational`, `biomedical_rag`, or `unclear`.
+
 Clear conversational/control inputs, such as `hi`, `hiii~`, `thanks`, `test`,
 `what can you do`, and `Just talk to me then`, bypass retrieval before context
 construction. They return a short uncited response, no sources,
-`confidence: none`, and a passing zero-claim `citation_check`. If a
-non-biomedical query reaches retrieval but scores too weakly to answer, the
-server returns a citation-free conversational fallback instead of forcing an
-irrelevant source. This prevents the grounding layer from attaching a random
-source ID to a greeting or chat prompt.
+`confidence: none`, and a passing zero-claim `citation_check`. If an ambiguous
+non-biomedical query reaches retrieval but lacks exact-match, lexical, rerank,
+or confidence support, the server returns a citation-free conversational
+fallback instead of forcing an irrelevant source. This prevents the grounding
+layer from attaching a random source ID to a greeting or chat prompt.
 
 For one-off retrieval debugging, use `src/search_hybrid_qwen.py` to inspect the
 combined alias, lexical, and vector ranking path. Use

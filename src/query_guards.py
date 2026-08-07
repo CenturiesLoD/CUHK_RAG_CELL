@@ -4,12 +4,17 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
+from typing import Any
 
 SPACE_RE = re.compile(r"\s+")
 EDGE_PUNCT_RE = re.compile(r"^[\s\"'`.,!?;:~()\[\]{}<>]+|[\s\"'`.,!?;:~()\[\]{}<>]+$")
 CITATION_RE = re.compile(r"\s*\[[^\[\]\n]+\]")
 GENE_SYMBOL_RE = re.compile(r"\b[A-Z][A-Z0-9-]{1,11}\b")
 ONTOLOGY_ID_RE = re.compile(r"\b(?:CL|GO|HP|PATO|UBERON|HGNC|NCBIGene):[A-Za-z0-9_:-]+\b", re.IGNORECASE)
+INTENT_CONVERSATIONAL = "conversational"
+INTENT_BIOMEDICAL_RAG = "biomedical_rag"
+INTENT_UNCLEAR = "unclear"
 
 CONVERSATIONAL_EXACT = {
     "hi",
@@ -99,6 +104,22 @@ CONVERSATIONAL_RESPONSE_PATTERNS = [
 ]
 
 
+def _clean_signal_values(values: Iterable[Any] | None, *, limit: int = 5) -> list[str]:
+    if values is None:
+        return []
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value or "").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        cleaned.append(text)
+        if len(cleaned) >= limit:
+            break
+    return cleaned
+
+
 def normalize_query_for_guard(query: str) -> str:
     text = EDGE_PUNCT_RE.sub("", str(query or "").casefold())
     text = SPACE_RE.sub(" ", text).strip()
@@ -116,20 +137,182 @@ def is_conversational_query(query: str) -> bool:
     return any(pattern.fullmatch(normalized) for pattern in CONVERSATIONAL_PATTERNS)
 
 
-def has_biomedical_intent(query: str) -> bool:
-    """Return true when a query looks like it is asking for domain knowledge."""
+def conversational_intent_signals(query: str) -> list[str]:
+    normalized = normalize_query_for_guard(query)
+    if not normalized:
+        return []
+    if normalized in CONVERSATIONAL_EXACT:
+        return [f"exact conversational phrase: {normalized}"]
+    for pattern in CONVERSATIONAL_PATTERNS:
+        if pattern.fullmatch(normalized):
+            return [f"conversational pattern: {pattern.pattern}"]
+    return []
+
+
+def biomedical_intent_signals(
+    query: str,
+    *,
+    alias_target_ids: Iterable[Any] | None = None,
+) -> list[str]:
+    """Return deterministic signals that a query should enter RAG retrieval."""
 
     raw = str(query or "")
     normalized = normalize_query_for_guard(raw)
+    signals: list[str] = []
     if not normalized:
-        return False
-    if ONTOLOGY_ID_RE.search(raw):
-        return True
-    if any(hint in normalized for hint in BIOMEDICAL_HINTS):
-        return True
-    if GENE_SYMBOL_RE.search(raw) and not is_conversational_query(raw):
-        return True
-    return False
+        return signals
+
+    ontology_matches = _clean_signal_values(match.group(0) for match in ONTOLOGY_ID_RE.finditer(raw))
+    if ontology_matches:
+        signals.append("ontology/gene identifier: " + ", ".join(ontology_matches))
+
+    alias_ids = _clean_signal_values(alias_target_ids)
+    if alias_ids:
+        signals.append("exact corpus alias match: " + ", ".join(alias_ids))
+
+    hint_matches = [hint for hint in sorted(BIOMEDICAL_HINTS, key=len, reverse=True) if hint in normalized]
+    if hint_matches:
+        signals.append("biomedical/domain term: " + ", ".join(hint_matches[:5]))
+
+    gene_symbols = _clean_signal_values(match.group(0) for match in GENE_SYMBOL_RE.finditer(raw))
+    if gene_symbols and not is_conversational_query(raw):
+        signals.append("gene-symbol-like token: " + ", ".join(gene_symbols))
+
+    return signals
+
+
+def has_biomedical_intent(query: str) -> bool:
+    """Return true when a query looks like it is asking for domain knowledge."""
+
+    return bool(biomedical_intent_signals(query))
+
+
+def retrieval_intent_signals(
+    retrieval_quality: dict[str, Any] | None,
+    results: list[dict[str, Any]] | None,
+) -> list[str]:
+    if not retrieval_quality or not results:
+        return []
+
+    top = results[0]
+    reasons = [str(reason) for reason in top.get("reasons", [])]
+    exact_match = any(reason.startswith("exact ") for reason in reasons)
+    bm25_norm = float(top.get("bm25_norm") or 0.0)
+    rerank_score = float(top.get("rerank_score") or 0.0)
+    neural_rerank_norm = float(top.get("neural_rerank_norm") or 0.0)
+    confidence = str(retrieval_quality.get("confidence") or "")
+
+    signals: list[str] = []
+    if exact_match:
+        signals.append("retrieval exact alias/name/id match")
+    if confidence in {"high", "medium"} and (bm25_norm >= 0.08 or rerank_score >= 0.45 or neural_rerank_norm >= 0.55):
+        signals.append(
+            "retrieval score support: "
+            f"confidence={confidence}, bm25_norm={bm25_norm:.3f}, "
+            f"rerank={rerank_score:.3f}, neural={neural_rerank_norm:.3f}"
+        )
+    return signals
+
+
+def intent_decision(
+    *,
+    intent: str,
+    confidence: str,
+    reason: str,
+    stage: str,
+    signals: Iterable[Any] | None = None,
+    needs_retrieval: bool = False,
+) -> dict[str, Any]:
+    return {
+        "intent": intent,
+        "confidence": confidence,
+        "reason": reason,
+        "stage": stage,
+        "signals": _clean_signal_values(signals, limit=10),
+        "needs_retrieval": needs_retrieval,
+    }
+
+
+def classify_query_intent(
+    query: str,
+    *,
+    alias_target_ids: Iterable[Any] | None = None,
+    retrieval_quality: dict[str, Any] | None = None,
+    results: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Route a query before RAG, then optionally refine after retrieval."""
+
+    normalized = normalize_query_for_guard(query)
+    if not normalized:
+        return intent_decision(
+            intent=INTENT_UNCLEAR,
+            confidence="low",
+            reason="empty query",
+            stage="pre_retrieval",
+            needs_retrieval=False,
+        )
+
+    biomedical_signals = biomedical_intent_signals(query, alias_target_ids=alias_target_ids)
+    conversational_signals = conversational_intent_signals(query)
+    alias_only_biomedical = bool(biomedical_signals) and all(
+        signal.startswith("exact corpus alias match") for signal in biomedical_signals
+    )
+
+    if conversational_signals and (not biomedical_signals or alias_only_biomedical):
+        return intent_decision(
+            intent=INTENT_CONVERSATIONAL,
+            confidence="high",
+            reason="hard conversational signal",
+            stage="pre_retrieval",
+            signals=conversational_signals,
+            needs_retrieval=False,
+        )
+    if biomedical_signals:
+        return intent_decision(
+            intent=INTENT_BIOMEDICAL_RAG,
+            confidence="high",
+            reason="hard biomedical signal",
+            stage="pre_retrieval",
+            signals=biomedical_signals,
+            needs_retrieval=True,
+        )
+    if conversational_signals:
+        return intent_decision(
+            intent=INTENT_CONVERSATIONAL,
+            confidence="high",
+            reason="hard conversational signal",
+            stage="pre_retrieval",
+            signals=conversational_signals,
+            needs_retrieval=False,
+        )
+
+    retrieval_signals = retrieval_intent_signals(retrieval_quality, results)
+    if retrieval_quality is not None:
+        if retrieval_signals:
+            return intent_decision(
+                intent=INTENT_BIOMEDICAL_RAG,
+                confidence="medium",
+                reason="ambiguous query gained retrieval support",
+                stage="post_retrieval",
+                signals=retrieval_signals,
+                needs_retrieval=True,
+            )
+        return intent_decision(
+            intent=INTENT_UNCLEAR,
+            confidence="low",
+            reason="ambiguous query lacked reliable biomedical retrieval support",
+            stage="post_retrieval",
+            signals=[str(retrieval_quality.get("reason") or "weak retrieval support")],
+            needs_retrieval=False,
+        )
+
+    return intent_decision(
+        intent=INTENT_UNCLEAR,
+        confidence="low",
+        reason="no hard biomedical or conversational signal",
+        stage="pre_retrieval",
+        needs_retrieval=True,
+    )
 
 
 def conversational_answer(query: str) -> str:
