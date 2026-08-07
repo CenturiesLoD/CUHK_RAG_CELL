@@ -4,14 +4,15 @@ import json
 import os
 import sys
 import unittest
+from base64 import b64encode
 from pathlib import Path
 from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "examples"))
+sys.path.insert(0, str(ROOT))
 
-from endpoint_discovery import resolve_base_url  # noqa: E402
+from src.hosted_endpoint import resolve_base_url  # noqa: E402
 
 
 class FakeResponse:
@@ -38,13 +39,20 @@ class EndpointDiscoveryTests(unittest.TestCase):
         self.assertEqual(resolve_base_url(), "https://env.example")
 
     @patch.dict(os.environ, {}, clear=True)
-    @patch("endpoint_discovery.urllib.request.urlopen")
+    @patch("src.hosted_endpoint.urllib.request.urlopen")
     def test_manifest_url_is_used(self, urlopen: object) -> None:
         urlopen.return_value = FakeResponse({"base_url": "https://manifest.example/"})
         self.assertEqual(resolve_base_url(manifest_url="https://registry.example"), "https://manifest.example")
 
     @patch.dict(os.environ, {}, clear=True)
-    @patch("endpoint_discovery.urllib.request.urlopen")
+    @patch("src.hosted_endpoint.urllib.request.urlopen")
+    def test_github_contents_manifest_is_used(self, urlopen: object) -> None:
+        manifest = b64encode(json.dumps({"base_url": "https://api.example/"}).encode("utf-8")).decode("ascii")
+        urlopen.return_value = FakeResponse({"encoding": "base64", "content": manifest})
+        self.assertEqual(resolve_base_url(manifest_url="https://api.github.example"), "https://api.example")
+
+    @patch.dict(os.environ, {}, clear=True)
+    @patch("src.hosted_endpoint.urllib.request.urlopen")
     def test_empty_manifest_is_rejected(self, urlopen: object) -> None:
         urlopen.return_value = FakeResponse({})
         with self.assertRaisesRegex(RuntimeError, "did not contain base_url"):

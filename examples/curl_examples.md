@@ -1,5 +1,14 @@
 # Hosted Cell RAG API Examples
 
+For the normal interactive terminal, use:
+
+```bash
+export CELL_RAG_DEMO_API_KEY="your-api-key"
+python rag_chat.py
+```
+
+The curl examples below are for inspecting the raw hosted API.
+
 Resolve the current quick-tunnel URL from the stable GitHub manifest, then set
 the API key supplied separately by the server operator:
 
@@ -11,7 +20,10 @@ export CELL_RAG_DEMO_API_KEY="your-api-key"
 To inspect the manifest directly:
 
 ```bash
-curl -s https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+curl -s \
+  -H "Accept: application/vnd.github+json" \
+  -H "User-Agent: cell-rag-demo" \
+  "https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main"
 ```
 
 Check health:

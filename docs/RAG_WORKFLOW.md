@@ -212,6 +212,16 @@ for live demonstration:
 It calls the internal RAG API rather than loading models itself. By default it
 binds only to `127.0.0.1`; use the Windows tunnel script for local external access.
 
+For the normal user-facing terminal, run:
+
+```bash
+python rag_chat.py
+```
+
+That CLI discovers the hosted endpoint, sends questions to `/ask`, and renders
+readable answers without raw JSON. Use the lower-level Python, PowerShell, curl,
+or smoke-test clients when inspecting API behavior.
+
 For external access without SSH, use the hosted demo backend:
 
 ```bash

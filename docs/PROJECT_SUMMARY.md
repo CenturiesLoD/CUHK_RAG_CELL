@@ -135,6 +135,12 @@ For external access, it is intended to be reached through the hosted CCI demo UR
 created by `scripts/init_public_demo.sh --publish-endpoint`. SSH tunneling
 remains available for local debugging.
 
+The normal user-facing terminal is `rag_chat.py`. It calls the hosted
+`/ask` endpoint, hides raw JSON by default, and prints the answer, confidence,
+citation status, and optional compact sources. The Python, PowerShell, curl, and
+smoke-test clients remain useful for debugging, API integration, and automated
+checks.
+
 ## Validation
 
 Primary commands:

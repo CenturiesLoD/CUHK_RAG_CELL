@@ -52,8 +52,12 @@ Cloudflare quick-tunnel URLs are temporary. The repo uses a stable GitHub
 manifest so client scripts can discover the current URL:
   docs/current_endpoint.json
 
-Raw manifest URL:
-  https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+Manifest API URL:
+  https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
+
+Do not rely on raw.githubusercontent.com for endpoint discovery during handoff
+testing; it can temporarily serve stale content after the publisher pushes a new
+quick-tunnel URL.
 
 The CCI runtime folder is not a Git checkout. Automatic publishing uses this
 separate lightweight checkout:

@@ -54,7 +54,8 @@ powershell -ExecutionPolicy Bypass -File scripts\init_public_demo_from_windows.p
   -HostName <CCI_HOST> `
   -Port <CCI_SSH_PORT> `
   -User <CCI_USER> `
-  -RuntimeDir <CCI_RUNTIME_DIR>
+  -RuntimeDir <CCI_RUNTIME_DIR> `
+  -PublishEndpoint
 ```
 
 The helper uses `CELL_RAG_SSH_KEY` when set, otherwise it checks the current
@@ -80,6 +81,34 @@ powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
   -ApiKey "your-api-key"
 ```
 
+The smoke test verifies the service. For a normal user-facing session, use the
+terminal below instead of the raw JSON client.
+
+## User-Mode Terminal
+
+For a normal interactive terminal instead of raw JSON output:
+
+```bash
+export CELL_RAG_DEMO_API_KEY="your-api-key"
+python rag_chat.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:CELL_RAG_DEMO_API_KEY="your-api-key"
+python rag_chat.py
+```
+
+This command enters user mode. Type questions at the `rag>` prompt. The terminal
+prints a readable answer, confidence, citation status, and optional compact
+sources. Use `/sources` to toggle source display, `/help` to see commands, and
+`/exit` to leave.
+
+For one-off integration tests, keep using `examples/python_client.py`,
+`examples/windows_client.ps1`, `examples/smoke_hosted_demo.py`, or
+`examples/curl_examples.md`; those intentionally expose raw API behavior.
+
 ## Find The URL
 
 ```bash
@@ -101,10 +130,11 @@ The repo provides a stable discovery manifest:
 docs/current_endpoint.json
 ```
 
-Its GitHub raw URL is stable:
+Clients read it through GitHub's contents API, which updates more reliably than
+`raw.githubusercontent.com` immediately after a tunnel URL change:
 
 ```text
-https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
 ```
 
 The example clients use this manifest automatically when `CELL_RAG_DEMO_URL` or

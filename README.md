@@ -68,7 +68,7 @@ That command starts or repairs the local vLLM model server, RAG API, public API
 wrapper, and Cloudflare tunnel. It also publishes the current public endpoint to:
 
 ```text
-https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
 ```
 
 ### 4. Running From A Different CCI Image
@@ -151,7 +151,33 @@ Expected result:
 - `/search` returns retrieved source records.
 - `citation_check.passed` is `true`.
 
-### 6. Ask A Question
+### 6. Enter User Mode
+
+Use this as the normal demo interface. It discovers the current hosted endpoint,
+uses the API key from `CELL_RAG_DEMO_API_KEY`, and prints readable answers
+instead of raw JSON.
+
+Linux/macOS:
+
+```bash
+export CELL_RAG_DEMO_API_KEY="your-api-key"
+python rag_chat.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:CELL_RAG_DEMO_API_KEY="your-api-key"
+python rag_chat.py
+```
+
+At the `rag>` prompt, ask a single-cell biology question. Useful commands:
+
+- `/sources`: toggle compact source display.
+- `/help`: show terminal commands.
+- `/exit`: leave user mode.
+
+For a one-off answer without entering the interactive terminal:
 
 Linux/macOS:
 
@@ -169,10 +195,14 @@ powershell -ExecutionPolicy Bypass -File examples\windows_client.ps1 `
   -Question "What is a regulatory T cell?"
 ```
 
-The example clients discover the current public URL from
-`docs/current_endpoint.json`. If the Cloudflare quick tunnel restarts, the URL
-may change, but the CCI startup command above republishes the manifest so users
-do not need to edit client code.
+The example clients discover the current public URL from the GitHub endpoint
+manifest at `docs/current_endpoint.json`. The code reads this through GitHub's
+contents API because `raw.githubusercontent.com` can temporarily serve stale
+content after a tunnel URL update. If the Cloudflare quick tunnel restarts, the
+URL may change, but the CCI startup command above republishes the manifest so
+users do not need to edit client code. Use `examples/python_client.py`,
+`examples/windows_client.ps1`, and `examples/curl_examples.md` when you want raw
+API output for debugging or integration work.
 
 ## What This Repo Contains
 
@@ -183,7 +213,7 @@ Included:
 
 - `src/`: API servers, corpus builders, retrieval, evaluation, and indexing code.
 - `scripts/`: startup, rebuild, smoke-test, audit, tunnel, and utility scripts.
-- `examples/`: small clients for the hosted API.
+- `examples/`: lower-level hosted API clients, curl examples, and smoke tests.
 - `eval/`: smoke-test retrieval and answer cases.
 - `demo/`: showcase questions.
 - `docs/`: source, workflow, hosted backend, and audit notes.
@@ -248,7 +278,7 @@ public API key.
 The hosted endpoint is discovered from this stable GitHub manifest:
 
 ```text
-https://raw.githubusercontent.com/CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json
+https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
 ```
 
 The actual backend URL is a Cloudflare quick-tunnel URL, so it can change when
@@ -276,11 +306,20 @@ $env:CELL_RAG_DEMO_API_KEY="your-api-key"
 python examples\smoke_hosted_demo.py
 ```
 
-The hosted client and smoke test use only the Python standard library. Install
-`requirements.txt` when you are setting up or repairing a CCI backend runtime,
-not when you are only calling the hosted API as a client.
+The user-mode terminal, hosted clients, and smoke tests use only the Python
+standard library. Install `requirements.txt` when you are setting up or repairing
+a CCI backend runtime, not when you are only calling the hosted API as a client.
 
-Ask one question:
+Enter user mode:
+
+```bash
+python rag_chat.py
+```
+
+Inside user mode, type questions at the `rag>` prompt. It prints a clean answer,
+confidence, citation status, and optional compact sources.
+
+For a one-off terminal answer without entering the interactive shell:
 
 ```bash
 python examples/python_client.py \
