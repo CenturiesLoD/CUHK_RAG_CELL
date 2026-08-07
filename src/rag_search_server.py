@@ -16,6 +16,12 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from transformers import AutoModel, AutoModelForSequenceClassification, AutoTokenizer
 
+from query_guards import (
+    conversational_answer,
+    conversational_citation_check,
+    conversational_retrieval_quality,
+    is_conversational_query,
+)
 from search_hybrid_qwen import (
     DEFAULT_QUERY_TASK,
     bm25_scores,
@@ -934,12 +940,24 @@ def health() -> dict[str, Any]:
 
 @app.post("/search")
 def search(request: SearchRequest) -> dict[str, Any]:
+    if is_conversational_query(request.query):
+        return {"query": request.query, "retrieval_quality": conversational_retrieval_quality(), "results": []}
+
     results = engine.search(request)
     return {"query": request.query, "retrieval_quality": assess_retrieval(results), "results": results}
 
 
 @app.post("/answer")
 def answer(request: AnswerRequest) -> dict[str, Any]:
+    if is_conversational_query(request.query):
+        return {
+            "query": request.query,
+            "answer": conversational_answer(request.query),
+            "retrieval_quality": conversational_retrieval_quality(),
+            "sources": [],
+            "citation_check": conversational_citation_check(),
+        }
+
     results = engine.search(request)
     retrieval_quality = assess_retrieval(results)
     context = build_context(results, request.max_context_chars)

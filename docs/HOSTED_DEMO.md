@@ -111,6 +111,10 @@ prints a readable answer, confidence, citation status, and optional compact
 sources. Use `/sources` to toggle source display, `/help` to see commands, and
 `/exit` to leave.
 
+Simple greetings and connectivity checks such as `hi` or `test` should return a
+short uncited response with no sources. If a greeting shows a biomedical source
+ID, rerun the hosted smoke test and restart the RAG server with the latest code.
+
 For one-off integration tests, keep using `examples/python_client.py`,
 `examples/windows_client.ps1`, `examples/smoke_hosted_demo.py`, or
 `examples/curl_examples.md`; those intentionally expose raw API behavior.

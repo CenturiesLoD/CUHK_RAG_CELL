@@ -21,6 +21,7 @@ class RepositoryLayoutTests(unittest.TestCase):
             "examples/smoke_hosted_demo.py",
             "src/cell_rag_cli.py",
             "src/hosted_endpoint.py",
+            "src/query_guards.py",
             "scripts/ensure_system_packages.sh",
             "scripts/init_public_demo.sh",
             "scripts/init_public_demo_from_windows.ps1",

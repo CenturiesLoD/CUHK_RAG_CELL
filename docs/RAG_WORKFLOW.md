@@ -196,6 +196,12 @@ answer citations, valid and invalid citations, uncited factual-looking claim
 units, and a `passed` flag. Answer smoke tests require this field to exist and
 pass, so citation regressions are caught through the normal eval path.
 
+Clear conversational/control inputs, such as `hi`, `thanks`, `test`, and
+`what can you do`, bypass retrieval before context construction. They return a
+short uncited response, no sources, `confidence: none`, and a passing
+zero-claim `citation_check`. This prevents the grounding layer from attaching a
+random source ID to a greeting.
+
 For one-off retrieval debugging, use `src/search_hybrid_qwen.py` to inspect the
 combined alias, lexical, and vector ranking path. Use
 `src/search_qwen_vectors.py` only when isolating dense-vector behavior;

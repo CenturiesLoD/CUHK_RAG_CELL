@@ -581,6 +581,11 @@ Use `/search` when you want retrieval results without generation.
 
 ## How Retrieval Works
 
+Before retrieval, the API checks for clear conversational/control inputs such as
+`hi`, `thanks`, `test`, and `what can you do`. Those requests bypass retrieval
+and return a short uncited response with no sources. This prevents irrelevant
+corpus records from being attached to greetings.
+
 The RAG API combines several ranking signals:
 
 1. Exact matching against curated aliases, ontology IDs, gene symbols, and accessions.

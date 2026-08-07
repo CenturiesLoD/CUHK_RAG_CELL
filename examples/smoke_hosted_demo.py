@@ -81,7 +81,9 @@ def main() -> int:
     if not args.api_key:
         errors.append("missing API key for authenticated endpoints")
         answer = {}
+        greeting_answer = {}
         search = {}
+        greeting_search = {}
     else:
         _, answer = request_json(
             "POST",
@@ -89,11 +91,24 @@ def main() -> int:
             api_key=args.api_key,
             payload={"question": args.question, "top_k": 3, "max_tokens": 180},
         )
+        _, greeting_answer = request_json(
+            "POST",
+            f"{base_url}/ask",
+            api_key=args.api_key,
+            payload={"question": "hi", "top_k": 3, "max_tokens": 80},
+        )
         _, search = request_json(
             "POST",
             f"{base_url}/search",
             api_key=args.api_key,
             payload={"query": args.question, "top_k": 3},
+            timeout=120,
+        )
+        _, greeting_search = request_json(
+            "POST",
+            f"{base_url}/search",
+            api_key=args.api_key,
+            payload={"query": "hi", "top_k": 3},
             timeout=120,
         )
 
@@ -105,6 +120,13 @@ def main() -> int:
             errors.append("citation_check did not pass")
         if not search.get("results"):
             errors.append("authenticated /search returned no results")
+        greeting_text = str(greeting_answer.get("answer", ""))
+        if "[" in greeting_text or greeting_answer.get("sources"):
+            errors.append("conversational greeting returned citations or sources")
+        if not greeting_answer.get("citation_check", {}).get("passed"):
+            errors.append("conversational greeting citation_check did not pass")
+        if greeting_search.get("results"):
+            errors.append("conversational search returned retrieval results")
 
     if health_status != 200:
         errors.append(f"/health status was {health_status}")
@@ -120,6 +142,9 @@ def main() -> int:
         "unauthenticated_ask_status": unauth_status,
         "answer_preview": str(answer.get("answer", ""))[:220] if isinstance(answer, dict) else "",
         "citation_check": answer.get("citation_check") if isinstance(answer, dict) else None,
+        "greeting_answer": greeting_answer.get("answer") if isinstance(greeting_answer, dict) else None,
+        "greeting_citation_check": greeting_answer.get("citation_check") if isinstance(greeting_answer, dict) else None,
+        "greeting_search_result_count": len(greeting_search.get("results", [])) if isinstance(greeting_search, dict) else None,
         "ask_source_ids": [
             source.get("doc_id") for source in answer.get("sources", [])
         ]
