@@ -103,6 +103,31 @@ CONVERSATIONAL_RESPONSE_PATTERNS = [
     re.compile(r"^i can answer single-cell biology questions using the hosted rag knowledge base[.!]?$"),
 ]
 
+CONVERSATIONAL_META_PATTERNS = [
+    # Confirmation / rhetorical questions
+    re.compile(
+        r"^(?:really|seriously|wait)[,!]?\s+"
+        r"(?:is|are|was|were|does|do|did|can|could|should|would)\b.+\?$"
+    ),
+
+    # "Is this ...?" / "Are you saying ...?"
+    re.compile(
+        r"^(?:is|are|was|were)\s+(?:this|that|it)\b.+\?$"
+    ),
+    re.compile(
+        r"^(?:are|do)\s+you\s+(?:saying|mean|think|really\s+mean)\b.+\?$"
+    ),
+
+    # Explicit meta-conversation
+    re.compile(
+        r"^(?:what|why|how)\s+do\s+you\s+mean\b.+\??$"
+    ),
+    re.compile(
+        r"^(?:are\s+you\s+sure|you'?re\s+sure)\b.+\??$"
+    ),
+]
+
+
 
 def _clean_signal_values(values: Iterable[Any] | None, *, limit: int = 5) -> list[str]:
     if values is None:
@@ -146,6 +171,18 @@ def conversational_intent_signals(query: str) -> list[str]:
     for pattern in CONVERSATIONAL_PATTERNS:
         if pattern.fullmatch(normalized):
             return [f"conversational pattern: {pattern.pattern}"]
+    return []
+
+def conversational_meta_signals(query: str) -> list[str]:
+    normalized = normalize_query_for_guard(query)
+
+    if not normalized:
+        return []
+
+    for pattern in CONVERSATIONAL_META_PATTERNS:
+        if pattern.fullmatch(normalized):
+            return [f"meta-conversational pattern: {pattern.pattern}"]
+
     return []
 
 
@@ -254,6 +291,8 @@ def classify_query_intent(
 
     biomedical_signals = biomedical_intent_signals(query, alias_target_ids=alias_target_ids)
     conversational_signals = conversational_intent_signals(query)
+    meta_conversational_signals = conversational_meta_signals(query)
+
     alias_only_biomedical = bool(biomedical_signals) and all(
         signal.startswith("exact corpus alias match") for signal in biomedical_signals
     )
@@ -267,6 +306,17 @@ def classify_query_intent(
             signals=conversational_signals,
             needs_retrieval=False,
         )
+
+    if meta_conversational_signals:
+        return intent_decision(
+            intent=INTENT_CONVERSATIONAL,
+            confidence="high",
+            reason="meta-conversational question",
+            stage="pre_retrieval",
+            signals=meta_conversational_signals,
+            needs_retrieval=False,
+        )
+
     if biomedical_signals:
         return intent_decision(
             intent=INTENT_BIOMEDICAL_RAG,
