@@ -103,6 +103,8 @@ CONVERSATIONAL_RESPONSE_PATTERNS = [
     re.compile(r"^i can answer single-cell biology questions using the hosted rag knowledge base[.!]?$"),
 ]
 
+#IF YOURE READING THIS HIIII
+
 CONVERSATIONAL_META_PATTERNS = [
     # Confirmation / rhetorical questions
     re.compile(
