@@ -84,9 +84,13 @@ def main() -> int:
         greeting_answer = {}
         stretched_greeting_answer = {}
         chat_answer = {}
+        refusal_answer = {}
+        scope_answer = {}
         search = {}
         greeting_search = {}
         chat_search = {}
+        refusal_search = {}
+        scope_search = {}
     else:
         _, answer = request_json(
             "POST",
@@ -112,6 +116,18 @@ def main() -> int:
             api_key=args.api_key,
             payload={"question": "Just talk to me then", "top_k": 3, "max_tokens": 80},
         )
+        _, refusal_answer = request_json(
+            "POST",
+            f"{base_url}/ask",
+            api_key=args.api_key,
+            payload={"question": "I don't want to", "top_k": 3, "max_tokens": 80},
+        )
+        _, scope_answer = request_json(
+            "POST",
+            f"{base_url}/ask",
+            api_key=args.api_key,
+            payload={"question": "Really? Is this a single-cell biology question?", "top_k": 3, "max_tokens": 80},
+        )
         _, search = request_json(
             "POST",
             f"{base_url}/search",
@@ -131,6 +147,20 @@ def main() -> int:
             f"{base_url}/search",
             api_key=args.api_key,
             payload={"query": "Just talk to me then", "top_k": 3},
+            timeout=120,
+        )
+        _, refusal_search = request_json(
+            "POST",
+            f"{base_url}/search",
+            api_key=args.api_key,
+            payload={"query": "I don't want to", "top_k": 3},
+            timeout=120,
+        )
+        _, scope_search = request_json(
+            "POST",
+            f"{base_url}/search",
+            api_key=args.api_key,
+            payload={"query": "Really? Is this a single-cell biology question?", "top_k": 3},
             timeout=120,
         )
 
@@ -154,6 +184,8 @@ def main() -> int:
         for label, payload in {
             "stretched greeting": stretched_greeting_answer,
             "chat request": chat_answer,
+            "refusal": refusal_answer,
+            "scope/meta question": scope_answer,
         }.items():
             text = str(payload.get("answer", ""))
             if "[" in text or payload.get("sources"):
@@ -168,6 +200,14 @@ def main() -> int:
             errors.append("conversational chat search returned retrieval results")
         if chat_search.get("retrieval_quality", {}).get("query_intent", {}).get("intent") != "conversational":
             errors.append("conversational chat search was not routed as conversational")
+        if refusal_search.get("results"):
+            errors.append("conversational refusal search returned retrieval results")
+        if refusal_search.get("retrieval_quality", {}).get("query_intent", {}).get("intent") != "conversational":
+            errors.append("conversational refusal search was not routed as conversational")
+        if scope_search.get("results"):
+            errors.append("conversational scope/meta search returned retrieval results")
+        if scope_search.get("retrieval_quality", {}).get("query_intent", {}).get("intent") != "conversational":
+            errors.append("conversational scope/meta search was not routed as conversational")
 
     if health_status != 200:
         errors.append(f"/health status was {health_status}")
@@ -190,8 +230,14 @@ def main() -> int:
         "stretched_greeting_answer": stretched_greeting_answer.get("answer") if isinstance(stretched_greeting_answer, dict) else None,
         "chat_answer": chat_answer.get("answer") if isinstance(chat_answer, dict) else None,
         "chat_query_intent": chat_answer.get("retrieval_quality", {}).get("query_intent") if isinstance(chat_answer, dict) else None,
+        "refusal_answer": refusal_answer.get("answer") if isinstance(refusal_answer, dict) else None,
+        "refusal_query_intent": refusal_answer.get("retrieval_quality", {}).get("query_intent") if isinstance(refusal_answer, dict) else None,
+        "scope_answer": scope_answer.get("answer") if isinstance(scope_answer, dict) else None,
+        "scope_query_intent": scope_answer.get("retrieval_quality", {}).get("query_intent") if isinstance(scope_answer, dict) else None,
         "greeting_search_result_count": len(greeting_search.get("results", [])) if isinstance(greeting_search, dict) else None,
         "chat_search_result_count": len(chat_search.get("results", [])) if isinstance(chat_search, dict) else None,
+        "refusal_search_result_count": len(refusal_search.get("results", [])) if isinstance(refusal_search, dict) else None,
+        "scope_search_result_count": len(scope_search.get("results", [])) if isinstance(scope_search, dict) else None,
         "ask_source_ids": [
             source.get("doc_id") for source in answer.get("sources", [])
         ]

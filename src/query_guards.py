@@ -34,6 +34,18 @@ CONVERSATIONAL_EXACT = {
     "ty",
     "ok",
     "okay",
+    "no",
+    "nope",
+    "nah",
+    "no thanks",
+    "not now",
+    "stop",
+    "cancel",
+    "nevermind",
+    "never mind",
+    "i don't want to",
+    "i dont want to",
+    "i do not want to",
     "test",
     "testing",
     "help",
@@ -53,8 +65,13 @@ CONVERSATIONAL_PATTERNS = [
     re.compile(r"^(how are you|how are you doing|who are you|what are you)$"),
     re.compile(r"^(what can you do|what do you do|can you help|can you help me)$"),
     re.compile(r"^(are you there|ping|hello world)$"),
+    re.compile(r"^(?:no|nope|nah)(?:\s+thanks?)?$"),
+    re.compile(r"^(?:not\s+now|stop|cancel|never\s*mind)$"),
+    re.compile(r"^i\s+(?:do\s+not|don'?t|dont)\s+want(?:\s+to)?(?:\s+(?:ask|chat|talk|do\s+that|right\s+now|now|today))?$"),
     re.compile(r"^(just\s+)?(?:talk|chat)\s+(?:to|with)\s+me(?:\s+(?:then|please))?$"),
     re.compile(r"^(?:let'?s|can we)\s+(?:talk|chat)$"),
+    re.compile(r"^(?:really\??\s*)?is\s+this\s+(?:a\s+)?single[- ]cell biology question\??$"),
+    re.compile(r"^(?:really\??\s*)?(?:is|was)\s+that\s+(?:a\s+)?single[- ]cell biology question\??$"),
 ]
 
 BIOMEDICAL_HINTS = {
@@ -100,6 +117,8 @@ CONVERSATIONAL_RESPONSE_PATTERNS = [
     re.compile(r"^(hello|hi|hey)[.!]?(?: how can i (assist|help) you(?: today)?[.!]?)?$"),
     re.compile(r"^(hello|hi|hey)[.!]? ask me a single-cell biology question when ready[.!]?$"),
     re.compile(r"^i'?m here[.!]? what would you like to talk about[?]?$"),
+    re.compile(r"^i\s+(?:do\s+not|don'?t|dont)\s+want(?:\s+to)?[.!]?$"),
+    re.compile(r"^(?:that'?s|thats) okay[.!]? we can pause(?:,? or you can ask something else whenever you'?re ready)?[.!]?$"),
     re.compile(r"^i can answer single-cell biology questions using the hosted rag knowledge base[.!]?$"),
 ]
 
@@ -253,6 +272,11 @@ def retrieval_intent_signals(
     return signals
 
 
+def has_only_soft_domain_hints(signals: Iterable[Any]) -> bool:
+    signal_text = [str(signal) for signal in signals]
+    return bool(signal_text) and all(signal.startswith("biomedical/domain term") for signal in signal_text)
+
+
 def intent_decision(
     *,
     intent: str,
@@ -299,7 +323,11 @@ def classify_query_intent(
         signal.startswith("exact corpus alias match") for signal in biomedical_signals
     )
 
-    if conversational_signals and (not biomedical_signals or alias_only_biomedical):
+    if conversational_signals and (
+        not biomedical_signals
+        or alias_only_biomedical
+        or has_only_soft_domain_hints(biomedical_signals)
+    ):
         return intent_decision(
             intent=INTENT_CONVERSATIONAL,
             confidence="high",
@@ -375,6 +403,23 @@ def conversational_answer(query: str) -> str:
         return "The hosted RAG API is reachable. Ask me a single-cell biology question when ready."
     if normalized in {"help", "what can you do", "what do you do", "can you help", "can you help me", "who are you", "what are you"}:
         return "I can answer single-cell biology questions using the hosted RAG knowledge base."
+    if "single cell biology question" in normalized or "single-cell biology question" in normalized:
+        return "Not as written. Ask me about a cell type, marker, gene, tissue, ontology term, or dataset when ready."
+    if normalized in {
+        "no",
+        "nope",
+        "nah",
+        "no thanks",
+        "not now",
+        "stop",
+        "cancel",
+        "nevermind",
+        "never mind",
+        "i don't want to",
+        "i dont want to",
+        "i do not want to",
+    }:
+        return "That's okay. We can pause, or you can ask something else whenever you're ready."
     if normalized in {"talk to me", "just talk to me", "just talk to me then", "chat with me", "just chat with me", "lets chat", "let's chat"}:
         return "I'm here. What would you like to talk about?"
     return "Hello. Ask me a single-cell biology question when ready."

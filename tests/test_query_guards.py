@@ -35,6 +35,31 @@ class QueryGuardTests(unittest.TestCase):
             with self.subTest(query=query):
                 self.assertTrue(is_conversational_query(query))
 
+    def test_refusals_and_control_phrases_bypass_retrieval(self) -> None:
+        for query in ["I don't want to", "I dont want to", "no thanks", "not now", "nevermind", "stop"]:
+            with self.subTest(query=query):
+                self.assertTrue(is_conversational_query(query))
+                decision = classify_query_intent(query)
+                self.assertEqual(decision["intent"], INTENT_CONVERSATIONAL)
+                self.assertFalse(decision["needs_retrieval"])
+
+    def test_meta_scope_questions_bypass_retrieval_despite_domain_words(self) -> None:
+        for query in [
+            "Really? Is this a single-cell biology question?",
+            "Is this a single cell biology question?",
+        ]:
+            with self.subTest(query=query):
+                self.assertTrue(is_conversational_query(query))
+                decision = classify_query_intent(query)
+                self.assertEqual(decision["intent"], INTENT_CONVERSATIONAL)
+                self.assertFalse(decision["needs_retrieval"])
+
+    def test_domain_questions_still_enter_rag(self) -> None:
+        decision = classify_query_intent("What is single-cell RNA sequencing?")
+
+        self.assertEqual(decision["intent"], INTENT_BIOMEDICAL_RAG)
+        self.assertTrue(decision["needs_retrieval"])
+
     def test_biomedical_short_queries_do_not_bypass_retrieval(self) -> None:
         for query in ["CD20", "FOXP3", "T cell", "What is Treg?", "HGNC:374", "CL:0000815"]:
             with self.subTest(query=query):
@@ -100,6 +125,12 @@ class QueryGuardTests(unittest.TestCase):
         self.assertEqual(citation_check["citations"], [])
         self.assertEqual(citation_check["claim_count"], 0)
 
+    def test_meta_scope_answer_has_no_citations(self) -> None:
+        answer = conversational_answer("Really? Is this a single-cell biology question?")
+
+        self.assertNotIn("[", answer)
+        self.assertIn("Not as written", answer)
+
     def test_non_domain_fallback_has_no_citations(self) -> None:
         answer = conversational_fallback_answer("what is the weather")
 
@@ -111,6 +142,12 @@ class QueryGuardTests(unittest.TestCase):
 
         self.assertTrue(is_conversational_response(answer))
         self.assertEqual(strip_inline_citations(answer), "Hello! How can I assist you today?")
+
+    def test_refusal_model_output_is_not_citable(self) -> None:
+        answer = "I don't want to [UniProt:O15178]."
+
+        self.assertTrue(is_conversational_response(answer))
+        self.assertEqual(strip_inline_citations(answer), "I don't want to.")
 
 
 if __name__ == "__main__":

@@ -407,6 +407,62 @@ Active source families:
 - CellMarker 3.0: marker gene sets.
 - PanglaoDB: curated marker gene associations.
 
+## End-to-End Query Flow
+
+The hosted demo is not a direct chat connection to Qwen3-32B. The user question
+passes through retrieval, ranking, prompt construction, model generation, and
+citation validation before an answer is returned.
+
+```text
+question
+  -> public API auth and forwarding
+  -> RAG intent router
+  -> alias and identifier normalization
+  -> hybrid retrieval
+  -> source-aware ranking
+  -> neural reranking
+  -> evidence/context assembly
+  -> cited prompt construction
+  -> vLLM-served Qwen3-32B generation
+  -> citation and grounding audit
+  -> final answer
+```
+
+Step details:
+
+1. The user asks through `rag_chat.py`, `examples/python_client.py`, or the
+   hosted `/ask` endpoint.
+2. The public API checks the API key and forwards the request to the private RAG
+   API on CCI.
+3. The RAG API classifies the query as `conversational`, `biomedical_rag`, or
+   `unclear`. Casual prompts bypass retrieval and return uncited chat responses.
+4. Biomedical queries are normalized against aliases, ontology IDs, gene symbols,
+   accessions, and source-specific identifiers.
+5. Retrieval combines exact matches, BM25-style lexical search, Qwen3-Embedding-8B
+   dense vectors, and the FAISS vector index.
+6. Source-aware ranking adjusts candidate priority based on the query type, such
+   as cell definitions, markers, gene identity, protein function, or atlas
+   evidence.
+7. The active MiniLM cross-encoder reranker reorders top candidates against the
+   exact user question.
+8. The best chunks are assembled into a compact evidence block with source IDs,
+   source names, and metadata preserved for citation tracing.
+9. The answer prompt is built from the user question, retrieved evidence, and
+   citation rules.
+10. vLLM keeps Qwen3-32B loaded on the CCI GPU and exposes it as an
+    OpenAI-compatible local endpoint. Qwen3-32B generates the natural-language
+    answer from the prepared RAG prompt.
+11. The RAG layer checks that cited IDs appear in the retrieved source set and
+    returns the answer, confidence metadata, sources, and `citation_check`.
+
+Model roles are intentionally separate:
+
+- Qwen3-Embedding-8B creates dense vectors for corpus chunks and user queries.
+- FAISS searches those vectors efficiently.
+- MiniLM reranks the best retrieval candidates.
+- Qwen3-32B drafts the generated answer from the prepared evidence prompt.
+- vLLM serves Qwen3-32B on GPU so the large model stays loaded between requests.
+
 ## Quickstart: Hosted API
 
 Use this path if the CCI backend is already running. You only need Python and the
@@ -587,8 +643,12 @@ Before retrieval, the API runs an intent router:
 2. Check hard biomedical signals: ontology IDs, HGNC/NCBI/UniProt-like IDs,
    gene-symbol-like tokens, domain terms, and exact corpus alias matches.
 3. Check hard conversational signals: greetings, thanks, tests, help prompts,
-   and chat requests such as `hiii~` or `Just talk to me then`.
-4. If still ambiguous, run retrieval and inspect exact-match, lexical, rerank,
+   refusal/control phrases such as `I don't want to`, and chat requests such as
+   `hiii~` or `Just talk to me then`.
+4. Treat scope/meta prompts such as `Is this a single-cell biology question?`
+   as conversational unless they contain a hard biomedical entity such as a
+   gene symbol, accession, or ontology ID.
+5. If still ambiguous, run retrieval and inspect exact-match, lexical, rerank,
    and confidence signals.
 
 The router returns `conversational`, `biomedical_rag`, or `unclear` in
