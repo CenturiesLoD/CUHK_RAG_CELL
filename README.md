@@ -3,25 +3,43 @@
 A Retrieval-Augmented Generation system for single-cell biology question answering.
 
 The project combines curated biological sources, a vector index, hybrid retrieval,
-source-aware ranking, optional reranking, and a local Qwen3-32B answer model. The
-large runtime artifacts are hosted on CCI; this repository contains the code,
-documentation, examples, tests, and rebuild scripts.
+source-aware ranking, optional reranking, and an OpenAI-compatible answer model.
+This repository is a portable backend blueprint: it contains code, docs, tests,
+evaluation cases, rebuild scripts, and config templates, but not model weights,
+generated corpora, embeddings, indexes, logs, or secrets.
+
+## Fresh Machine Rebuild
+
+Use this path when the old CCI runtime is unavailable and you need to recreate
+the backend somewhere new:
+
+```bash
+git clone https://github.com/CenturiesLoD/CUHK_RAG_BACKEND.git
+cd CUHK_RAG_BACKEND
+cp .env.example .env
+scripts/bootstrap_machine.sh
+scripts/download_models.sh
+```
+
+Then follow:
+
+- `docs/FRESH_MACHINE_REBUILD.md`: full fresh Linux GPU host rebuild.
+- `docs/AGENT_HANDOFF.md`: concise instructions for a future coding agent.
+- `docs/MODEL_REGISTRY.md`: default model IDs and model-swap notes.
+- `docs/source_registry.template.json`: source URLs and intended builders.
 
 ## Step-By-Step: Run The Hosted Model
 
-Use this first if you want to test the model without downloading model weights,
-source files, embeddings, or vector indexes. The full model runs on the CCI
-server; your local machine only sends API requests.
+Use this only when a hosted backend is currently running. The old CCI host is
+temporary, so future deployments should treat this section as an optional hosted
+mode, not as the permanent source of truth.
 
 ### 1. Clone The Repository
 
 ```bash
-git clone https://github.com/CenturiesLoD/CUHK_RAG_CELL.git
-cd CUHK_RAG_CELL
+git clone https://github.com/CenturiesLoD/CUHK_RAG_BACKEND.git
+cd CUHK_RAG_BACKEND
 ```
-
-The project-facing name is SLAI RAG Cell, but the current GitHub repository slug
-is still `CenturiesLoD/CUHK_RAG_CELL`.
 
 If `git clone` is unavailable, download the GitHub ZIP archive for `main` and
 open a terminal in the extracted folder.
@@ -125,7 +143,7 @@ That command starts or repairs the local vLLM model server, RAG API, public API
 wrapper, and Cloudflare tunnel. It also publishes the current public endpoint to:
 
 ```text
-https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
+https://api.github.com/repos/CenturiesLoD/CUHK_RAG_BACKEND/contents/docs/current_endpoint.json?ref=main
 ```
 
 At the beginning of startup, `scripts/init_public_demo.sh` runs
@@ -351,7 +369,8 @@ Included:
 - `src/`: API servers, corpus builders, retrieval, evaluation, and indexing code.
 - `scripts/`: startup, rebuild, smoke-test, audit, tunnel, and utility scripts.
 - `examples/`: lower-level hosted API clients, curl examples, and smoke tests.
-- `eval/`: smoke-test retrieval and answer cases.
+- `eval/`: smoke-test cases, the single-cell benchmark, and manual baseline
+  scoring templates.
 - `demo/`: showcase questions.
 - `docs/`: source, workflow, hosted backend, and audit notes.
 - `.env.example`: configuration template.
@@ -471,7 +490,7 @@ public API key.
 The hosted endpoint is discovered from this stable GitHub manifest:
 
 ```text
-https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
+https://api.github.com/repos/CenturiesLoD/CUHK_RAG_BACKEND/contents/docs/current_endpoint.json?ref=main
 ```
 
 The actual backend URL is a Cloudflare quick-tunnel URL, so it can change when
@@ -871,6 +890,29 @@ scripts/run_answer_eval.sh
 scripts/run_answer_eval.sh --cases eval/cellxgene_answer_cases.jsonl
 ```
 
+Run the broader hosted benchmark:
+
+Windows PowerShell:
+
+```powershell
+$env:CELL_RAG_DEMO_API_KEY = "<api-key>"
+python src\evaluate_single_cell_benchmark.py
+```
+
+Linux/macOS:
+
+```bash
+export CELL_RAG_DEMO_API_KEY="<api-key>"
+scripts/run_single_cell_benchmark.sh
+```
+
+The benchmark cases are in `eval/single_cell_benchmark.jsonl`. They cover
+guardrail chat, cell-type definitions, ontology ID lookup, HGNC/NCBI/UniProt
+gene and protein questions, marker questions, CELLxGENE summary questions,
+cross-source synthesis, and hard negatives. See `docs/BENCHMARK.md` for the
+rubric and the `eval/online_baseline_scores_template.csv` sheet used to compare
+with online alternatives.
+
 Run the full smoke suite:
 
 ```bash
@@ -901,16 +943,19 @@ server audit verifies the tunnel process and URL state with
 `PUBLIC_DEMO_SKIP_HEALTH=1`. The external hosted smoke test remains the final
 HTTPS reachability check.
 
-Current smoke coverage:
+Current evaluation layers:
 
-- main retrieval cases: `33`
-- CELLxGENE retrieval cases: `5`
-- main answer cases: `21`
-- CELLxGENE answer cases: `2`
+- fresh-clone repository checks: syntax, unit tests, layout, safety;
+- server smoke tests: local services, public wrapper, citation checks;
+- source-aware retrieval and answer evals under `eval/`;
+- broader hosted benchmark under `eval/single_cell_benchmark.jsonl`;
+- manual online-alternative scoring template under
+  `eval/online_baseline_scores_template.csv`.
 
 ## Known Limits
 
-- Evaluation is smoke-level, not a full scientific benchmark.
+- Smoke evaluation is not a full scientific benchmark. The broader benchmark is
+  still a curated v1 test set, not an exhaustive proof of biological correctness.
 - CELLxGENE is summarized from `obs` metadata only. It does not include dataset
   titles, publication links, donor-level metadata, expression matrices,
   marker-expression evidence, or differential expression.

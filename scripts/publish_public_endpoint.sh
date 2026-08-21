@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUNTIME_MANIFEST="${PUBLIC_ENDPOINT_RUNTIME_MANIFEST:-$ROOT/docs/current_endpoint.json}"
-REPO_URL="${PUBLIC_ENDPOINT_REPO_URL:-ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_CELL.git}"
+REPO_URL="${PUBLIC_ENDPOINT_REPO_URL:-ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_BACKEND.git}"
 REPO_BRANCH="${PUBLIC_ENDPOINT_REPO_BRANCH:-main}"
 REPO_DIR="${PUBLIC_ENDPOINT_REPO_DIR:-$ROOT/.endpoint_repo}"
 DEPLOY_KEY="${PUBLIC_ENDPOINT_DEPLOY_KEY:-$ROOT/secrets/github_deploy_key}"

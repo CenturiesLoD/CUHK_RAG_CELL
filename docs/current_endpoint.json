@@ -1,7 +1,7 @@
 {
-  "base_url": "https://medicines-patricia-dis-lifetime.trycloudflare.com",
-  "status_url": "https://medicines-patricia-dis-lifetime.trycloudflare.com/health",
-  "updated_at_utc": "2026-08-19T09:27:55Z",
-  "backend": "CCI Cloudflare quick tunnel",
-  "note": "This URL is discovered through this stable GitHub manifest. If the quick tunnel restarts, update this file with the new URL."
+  "base_url": "https://replace-after-starting-backend.example.invalid",
+  "status_url": "https://replace-after-starting-backend.example.invalid/health",
+  "updated_at_utc": "2026-08-21T00:00:00Z",
+  "backend": "placeholder",
+  "note": "Start a hosted backend and run scripts/init_public_demo.sh --publish-endpoint to replace this placeholder with a live URL."
 }

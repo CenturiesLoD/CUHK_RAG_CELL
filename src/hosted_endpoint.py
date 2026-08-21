@@ -11,11 +11,11 @@ from base64 import b64decode
 
 DEFAULT_ENDPOINT_MANIFEST_URL = (
     "https://api.github.com/repos/"
-    "CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main"
+    "CenturiesLoD/CUHK_RAG_BACKEND/contents/docs/current_endpoint.json?ref=main"
 )
 RAW_ENDPOINT_MANIFEST_URL = (
     "https://raw.githubusercontent.com/"
-    "CenturiesLoD/CUHK_RAG_CELL/main/docs/current_endpoint.json"
+    "CenturiesLoD/CUHK_RAG_BACKEND/main/docs/current_endpoint.json"
 )
 
 
@@ -24,7 +24,7 @@ def _load_manifest(manifest_url: str, timeout: int) -> dict[str, object]:
         manifest_url,
         headers={
             "Accept": "application/vnd.github+json",
-            "User-Agent": "CUHK_RAG_CELL endpoint discovery",
+            "User-Agent": "CUHK_RAG_BACKEND endpoint discovery",
         },
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:

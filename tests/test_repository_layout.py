@@ -43,7 +43,7 @@ class RepositoryLayoutTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         curl_examples = (ROOT / "examples/curl_examples.md").read_text(encoding="utf-8")
         self.assertIn(
-            "git clone https://github.com/CenturiesLoD/CUHK_RAG_CELL.git",
+            "git clone https://github.com/CenturiesLoD/CUHK_RAG_BACKEND.git",
             readme,
         )
         quick_tunnel_url = re.compile(r"https://[A-Za-z0-9-]+\.trycloudflare\.com")

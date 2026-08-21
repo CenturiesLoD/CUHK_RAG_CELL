@@ -1,4 +1,4 @@
-Codex operating notes for CUHK_RAG_CELL
+Codex operating notes for CUHK_RAG_BACKEND
 
 Purpose
 -------
@@ -61,7 +61,7 @@ manifest so client scripts can discover the current URL:
   docs/current_endpoint.json
 
 Manifest API URL:
-  https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
+  https://api.github.com/repos/CenturiesLoD/CUHK_RAG_BACKEND/contents/docs/current_endpoint.json?ref=main
 
 Do not rely on raw.githubusercontent.com for endpoint discovery during handoff
 testing; it can temporarily serve stale content after the publisher pushes a new
@@ -72,16 +72,16 @@ separate lightweight checkout:
   <CCI_RUNTIME_DIR>/.endpoint_repo
 
 The publisher should push through GitHub SSH over port 443:
-  ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_CELL.git
+  ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_BACKEND.git
 
-Do not switch it back to git@github.com:CenturiesLoD/CUHK_RAG_CELL.git unless
+Do not switch it back to git@github.com:CenturiesLoD/CUHK_RAG_BACKEND.git unless
 CCI outbound SSH port 22 has been confirmed. Port 22 timed out from CCI.
 
 The deploy key private half is stored on CCI:
   <CCI_RUNTIME_DIR>/secrets/github_deploy_key
 
 GitHub must contain the matching public deploy key with write access under:
-  CenturiesLoD/CUHK_RAG_CELL -> Settings -> Deploy keys
+  CenturiesLoD/CUHK_RAG_BACKEND -> Settings -> Deploy keys
 
 The deploy key can write to the whole repo. The script limits behavior by only
 copying, adding, committing, and pushing docs/current_endpoint.json. This is a

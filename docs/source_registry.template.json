@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "note": "Template source registry for rebuilding the backend on a fresh host. Generated raw/processed/chunk artifacts remain outside Git.",
+  "sources": [
+    {
+      "source_id": "cl",
+      "name": "Cell Ontology",
+      "source_type": "cell_ontology",
+      "download_url": "http://purl.obolibrary.org/obo/cl.obo",
+      "license": "CC BY 4.0",
+      "version_pin": "use OBO release/date recorded at rebuild time",
+      "builder": "src/build_obo_corpus.py",
+      "outputs": ["raw/cl.obo", "processed/cl_terms.jsonl", "processed/cl_aliases.jsonl", "chunks/cl_chunks.jsonl"]
+    },
+    {
+      "source_id": "uberon_anatomy",
+      "name": "Uberon",
+      "source_type": "anatomy_ontology",
+      "download_url": "http://purl.obolibrary.org/obo/uberon.obo",
+      "license": "CC BY 3.0",
+      "version_pin": "use OBO release/date recorded at rebuild time",
+      "builder": "src/build_obo_corpus.py",
+      "outputs": ["raw/uberon_anatomy.obo", "processed/uberon_anatomy_terms.jsonl", "processed/uberon_anatomy_aliases.jsonl", "chunks/uberon_anatomy_chunks.jsonl"]
+    },
+    {
+      "source_id": "go_ontology",
+      "name": "Gene Ontology",
+      "source_type": "gene_ontology",
+      "download_url": "https://current.geneontology.org/ontology/go.obo",
+      "license": "CC BY 4.0",
+      "version_pin": "use ontology release/date recorded at rebuild time",
+      "builder": "src/build_obo_corpus.py",
+      "outputs": ["raw/go_ontology.obo", "processed/go_ontology_terms.jsonl", "processed/go_ontology_aliases.jsonl", "chunks/go_ontology_chunks.jsonl"]
+    },
+    {
+      "source_id": "pato_quality",
+      "name": "PATO",
+      "source_type": "phenotype_ontology",
+      "download_url": "http://purl.obolibrary.org/obo/pato.obo",
+      "license": "CC BY 4.0",
+      "version_pin": "use OBO release/date recorded at rebuild time",
+      "builder": "src/build_obo_corpus.py",
+      "outputs": ["raw/pato_quality.obo", "processed/pato_quality_terms.jsonl", "processed/pato_quality_aliases.jsonl", "chunks/pato_quality_chunks.jsonl"]
+    },
+    {
+      "source_id": "cellxgene_census_human_primary",
+      "name": "CELLxGENE Census",
+      "source_type": "single_cell_atlas_metadata",
+      "download_url": "https://chanzuckerberg.github.io/cellxgene-census/",
+      "license": "CC BY 4.0",
+      "version_pin": "pin Census version during rebuild",
+      "builder": "src/build_cellxgene_census_top_celltypes.py",
+      "outputs": ["processed/cellxgene_census_human_primary_counts.jsonl", "processed/cellxgene_census_human_primary_aliases.jsonl", "chunks/cellxgene_census_human_primary_chunks.jsonl"]
+    },
+    {
+      "source_id": "hgnc",
+      "name": "HGNC complete set",
+      "source_type": "gene_nomenclature",
+      "download_url": "https://storage.googleapis.com/public-download-files/hgnc/json/json/hgnc_complete_set.json",
+      "license": "free use with attribution",
+      "version_pin": "download date recorded by builder",
+      "builder": "src/build_hgnc_corpus.py",
+      "outputs": ["raw/hgnc_complete_set.json", "processed/hgnc_genes.jsonl", "processed/hgnc_aliases.jsonl", "chunks/hgnc_chunks.jsonl"]
+    },
+    {
+      "source_id": "ncbi_gene_human",
+      "name": "NCBI Gene Homo sapiens gene_info",
+      "source_type": "gene_reference",
+      "download_url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz",
+      "license": "public domain / cite NCBI Gene",
+      "version_pin": "download date recorded by builder",
+      "builder": "src/build_ncbi_gene_corpus.py",
+      "outputs": ["raw/ncbi_gene_human_gene_info.gz", "processed/ncbi_gene_human_records.jsonl", "processed/ncbi_gene_human_aliases.jsonl", "chunks/ncbi_gene_human_chunks.jsonl"]
+    },
+    {
+      "source_id": "uniprot_human_reviewed",
+      "name": "UniProtKB reviewed human",
+      "source_type": "protein_function",
+      "download_url": "https://rest.uniprot.org/uniprotkb/search?query=organism_id:9606%20AND%20reviewed:true",
+      "license": "CC BY 4.0",
+      "version_pin": "download date recorded by builder",
+      "builder": "src/build_uniprot_corpus.py",
+      "outputs": ["raw/uniprot_human_reviewed.tsv", "processed/uniprot_human_reviewed_records.jsonl", "processed/uniprot_human_reviewed_aliases.jsonl", "chunks/uniprot_human_reviewed_chunks.jsonl"]
+    },
+    {
+      "source_id": "cellmarker3",
+      "name": "CellMarker 3.0",
+      "source_type": "cell_marker_database",
+      "download_url": "https://bio-bigdata.hrbmu.edu.cn/CellMarker/file/all_cell_marker.zip",
+      "license": "academic use; verify CellMarker terms",
+      "version_pin": "download date recorded by builder",
+      "builder": "src/build_marker_corpus.py",
+      "outputs": ["processed/cellmarker3_records.jsonl", "processed/cellmarker3_aliases.jsonl", "chunks/cellmarker3_chunks.jsonl"]
+    },
+    {
+      "source_id": "panglaodb",
+      "name": "PanglaoDB markers",
+      "source_type": "cell_marker_database",
+      "download_url": "https://panglaodb.se/markers/PanglaoDB_markers_27_Mar_2020.tsv.gz",
+      "license": "free download; cite PanglaoDB Database 2019",
+      "version_pin": "27 Mar 2020",
+      "builder": "src/build_marker_corpus.py",
+      "outputs": ["processed/panglaodb_records.jsonl", "processed/panglaodb_aliases.jsonl", "chunks/panglaodb_chunks.jsonl"]
+    }
+  ]
+}
+

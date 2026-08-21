@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KEYFILE="${PUBLIC_ENDPOINT_DEPLOY_KEY:-$ROOT/secrets/github_deploy_key}"
-REPO_URL="${PUBLIC_ENDPOINT_REPO_URL:-ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_CELL.git}"
+REPO_URL="${PUBLIC_ENDPOINT_REPO_URL:-ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_BACKEND.git}"
 REPO_BRANCH="${PUBLIC_ENDPOINT_REPO_BRANCH:-main}"
 REPO_DIR="${PUBLIC_ENDPOINT_REPO_DIR:-$ROOT/.endpoint_repo}"
 
@@ -27,7 +27,7 @@ Public key to add to GitHub as a repo deploy key with write access:
 $(cat "$KEYFILE.pub")
 
 GitHub location:
-  CenturiesLoD/CUHK_RAG_CELL -> Settings -> Deploy keys -> Add deploy key
+  CenturiesLoD/CUHK_RAG_BACKEND -> Settings -> Deploy keys -> Add deploy key
 
 Required checkbox:
   Allow write access

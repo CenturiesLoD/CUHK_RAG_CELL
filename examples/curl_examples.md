@@ -23,7 +23,7 @@ To inspect the manifest directly:
 curl -s \
   -H "Accept: application/vnd.github+json" \
   -H "User-Agent: cell-rag-demo" \
-  "https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main"
+  "https://api.github.com/repos/CenturiesLoD/CUHK_RAG_BACKEND/contents/docs/current_endpoint.json?ref=main"
 ```
 
 Check health:

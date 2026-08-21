@@ -1,0 +1,6 @@
+case_id,system,answer_date,answer_or_link,correctness_0_3,citation_support_0_3,source_specificity_0_3,scope_handling_0_3,hallucination_penalty_0_3,latency_seconds,reviewer,notes
+celltype_treg_definition,Perplexity,,,,,,,,,,
+celltype_treg_definition,Elicit,,,,,,,,,,
+celltype_treg_definition,SciSpace,,,,,,,,,,
+celltype_treg_definition,Consensus,,,,,,,,,,
+celltype_treg_definition,SLAI_RAG_CELL,,,,,,,,,,

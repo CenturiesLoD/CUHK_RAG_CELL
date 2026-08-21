@@ -144,7 +144,7 @@ Clients read it through GitHub's contents API, which updates more reliably than
 `raw.githubusercontent.com` immediately after a tunnel URL change:
 
 ```text
-https://api.github.com/repos/CenturiesLoD/CUHK_RAG_CELL/contents/docs/current_endpoint.json?ref=main
+https://api.github.com/repos/CenturiesLoD/CUHK_RAG_BACKEND/contents/docs/current_endpoint.json?ref=main
 ```
 
 The example clients use this manifest automatically when `CELL_RAG_DEMO_URL` or
@@ -167,7 +167,7 @@ small checkout dedicated to GitHub updates:
 The publisher uses GitHub SSH over port `443` by default:
 
 ```text
-ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_CELL.git
+ssh://git@ssh.github.com:443/CenturiesLoD/CUHK_RAG_BACKEND.git
 ```
 
 This avoids CCI networks that block outbound SSH on port `22`.
@@ -191,7 +191,7 @@ scripts/setup_public_endpoint_publisher.sh
 Add the printed public key in GitHub:
 
 ```text
-CenturiesLoD/CUHK_RAG_CELL -> Settings -> Deploy keys -> Add deploy key
+CenturiesLoD/CUHK_RAG_BACKEND -> Settings -> Deploy keys -> Add deploy key
 ```
 
 Enable:
